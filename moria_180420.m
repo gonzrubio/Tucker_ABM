@@ -75,15 +75,21 @@ maxhh=length(pph);
 %Assign household locations, with isoboxes occupying a square in the center
 hhloc1=(1-sqrt(iba))/2+sqrt(iba)*rand(pop(Nb,1),2);
 hhloc2=rand(pop(N)-pop(Nb),2);
+
 hhloc2w=ceil(rand(pop(N)-pop(Nb),1)/.25);
+
 hhloc2(hhloc2w==1,:)=[hhloc2(hhloc2w==1,1)*(1-sqrt(iba))/2+1-(1-sqrt(iba))/2,...
     hhloc2(hhloc2w==1,2)*(1-(1-sqrt(iba))/2)];
+
 hhloc2(hhloc2w==2,:)=[hhloc2(hhloc2w==2,1)*(1-(1-sqrt(iba))/2)+(1-sqrt(iba))/2,...
     hhloc2(hhloc2w==2,2)*(1-sqrt(iba))/2+1-(1-sqrt(iba))/2];
+
 hhloc2(hhloc2w==3,:)=[hhloc2(hhloc2w==3,1)*(1-sqrt(iba))/2,...
     hhloc2(hhloc2w==3,2)*(1-(1-sqrt(iba))/2)+(1-sqrt(iba))/2];
+
 hhloc2(hhloc2w==4,:)=[hhloc2(hhloc2w==4,1)*(1-(1-sqrt(iba))/2),...
     hhloc2(hhloc2w==4,2)*(1-sqrt(iba))/2];
+
 hhloc=[hhloc1;hhloc2];
 
 %POSITION TOILETS on a grid evenly spaced throughout the camp
