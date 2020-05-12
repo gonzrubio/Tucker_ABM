@@ -258,7 +258,7 @@ while finished==0
 
     %IDENTIFY CONTAGIOUS AND ACTVE PEOPLE IN DIFFERENT CONTEXTS
     %Contagious in the house and at toilets, in population
-    cpih=(pop(:,2)>1 & pop(:,2)<6); 
+    cpih=(pop(:,2)>1 & pop(:,2)<6);  
     %Contagious in the house, in quarantine
     cpihq=(pop(:,2)>8 & pop(:,2)<13);  
     %Contagious at large in the population (all - for food lines)
