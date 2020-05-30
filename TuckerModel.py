@@ -826,9 +826,6 @@ for i in range(d2s):
     # Furthermore, at this point we lack any data at all on how severely COVID-19 may affect populations that
     # are initially malnourished or otherwise in poor condition.  
     
-    asp = np.array([0,.000408,.0104,.0343,.0425,.0816,.118,.166,.184])        # Verity et al. hospitalisation
-    aspc = np.array([.0101,.0209,.0410,.0642,.0721,.2173,.2483,.6921,.6987])  # Verity et al. corrected for Tuite
-    
     # Assigned to recovered state (mild and severe (recovery could be death) symptoms)
     mild_rec = np.random.uniform(0,1,N) > math.exp(0.2*math.log(0.1))   # Liu et al 2020 The Lancet.
     sev_rec = np.random.uniform(0,1,N) > math.exp(math.log(63/153)/12)  # Cai et al.
@@ -837,8 +834,9 @@ for i in range(d2s):
     
     pick_sick = np.random.uniform(0,1,N)                            # Get random numbers to determine health states.
     pop_9[(pop_9[:,1]==3)+(pop_9[:,3]==6),1] = 4                    # If 6 days as symptomatic, move to state mild.
-    # pop_9[np.where((pop_9[:,1]==3)+(pop_9[:,3]==6)),1] = 4          # If 6 days as symptomatic, move to state mild.
-    
+
+    asp = np.array([0,.000408,.0104,.0343,.0425,.0816,.118,.166,.184])        # Verity et al. hospitalisation
+    aspc = np.array([.0101,.0209,.0410,.0642,.0721,.2173,.2483,.6921,.6987])  # Verity et al. corrected for Tuite    
     for sci in range(len(asp)-1):
         thosp = thosp + np.sum((pop_9[:,1]==4)+(pop_9[:,3]==6)+(pick_sick<asp[sci])+
                                (pop_9[:,5]>=10*sci)+(pop_9[:,5]<(10*sci+1)) == 5)
