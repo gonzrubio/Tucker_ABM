@@ -152,6 +152,7 @@ thosp=0;
 while finished==0
     
     i=i+1;
+    fprintf("Day #%i\n", i) ;
     
     %Record states
     track_states(i,:)=hist(pop(:,2),0:13);
@@ -162,11 +163,13 @@ while finished==0
     end
     if ((sum(track_states(i,2:6))+sum(track_states(i,8:14)))==0 & i>10)
         finished=1;
+        fprintf("Epidemic ended on day #%i\n", i) ;
     end
     
     %Introduce new interventions on a cue
     if (op==1 & i>1 & (sum(cpih)-sum(cpco))/N>-1)
-        iat1=i
+        fprintf("Introduced new interventions on a cue at iteration #%i\n", i) ;
+        iat1=i ;
         op=0;
         lr1=0.001;
         fblocks=[12,12];
@@ -346,23 +349,23 @@ while finished==0
     pop((pop(:,2)==13 & pop(:,4)>=7),2)=6;
     
     %TRACK INFECTION THROUGH SPACE
-    if rem(i,5)==0
-        figure(1)
-        scatter(hhloc(:,1),hhloc(:,2),(1+infh).^2,hheth)
-        drawnow
-    end
+%     if rem(i,5)==0
+%         figure(1)
+%         scatter(hhloc(:,1),hhloc(:,2),(1+infh).^2,hheth)
+%         drawnow
+%     end
     
 end
 
 % %TRACK INFECTION THROUGH TIME
-figure(2)
-plot(track_states(1:i,1:7))
-legend('susc','exp','asy','sym','mrec','sev','rec')
-% 
-figure(3)
-plot(track_states(1:i,2:6))
-legend('exp','asy','sym','mrec','sev')
-% 
+% figure(2)
+% plot(track_states(1:i,1:7))
+% legend('susc','exp','asy','sym','mrec','sev','rec')
+% % 
+% figure(3)
+% plot(track_states(1:i,2:6))
+% legend('exp','asy','sym','mrec','sev')
+% % 
 % figure(4)
 % plot(track_states(1:i,8:14))
 % legend('susc','exp','asy','sym','mrec','sev','rec')
