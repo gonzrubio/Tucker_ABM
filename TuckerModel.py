@@ -933,8 +933,8 @@ for i in range(d2s):
     ##########################################################
     # COMPUTE INFECTION PROBABILITIES FOR EACH PERSON BY HOUSEHOLD
     # Probability for members of each household to contract from their housemates
-    cfh = (1-(1-twh))**np.array(infh)       # In population.
-    cfhq = (1-(1-twh))**np.array(infhq)     # In quarantine.
+    cfh = 1-(1-twh)**np.array(infh)       # In population.
+    cfhq = 1-(1-twh)**np.array(infhq)     # In quarantine.
     # CHECK THIS MI-DRUN !!!
     
     # Compute proportions infecteds at toilets and in food lines
