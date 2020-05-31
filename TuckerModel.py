@@ -363,9 +363,9 @@ assert pop_9.shape==(18700, 9)
 pph = np.bincount(ui)
 maxhh = pph.size
 
-plt.hist(pph)
-plt.xlabel('people per house')
-plt.show()
+#plt.hist(pph)
+#plt.xlabel('people per house')
+#plt.show()
 
 print(maxhh)  # This number is different than total number of house holds
 print(ht+hb)
@@ -706,6 +706,11 @@ def isFinished(states,iteration):
     '''Counts the number of individuals who are not suceptible or recovered.'''
     return (np.sum(states) == 0 and 10 < iteration)
 
+def accumarray(subs,val):
+    '''Construct Array with accumulation.
+    https://www.mathworks.com/help/matlab/ref/accumarray.html'''
+    return np.array([np.sum(val[np.where(subs==i)]) for i in np.unique(subs)])
+
 # In[67]:
 
 
@@ -919,15 +924,15 @@ for i in range(d2s):
     cpcow = np.logical_and(cpco==True,pop_9[:,8]==True)
     
     
-    ##########################################################
+    ##########################################################    
     # COMPUTE INFEECTED PEOPLE PER HOUSEHOLD.
-    # There is some bug in here.
-    infh = np.histogram(cpih,np.arange(1,maxhh+1))[0]   # All infected in house and at toilets, population 
-    infhq = np.histogram(cpihq,np.arange(1,maxhh+1))[0] # All infected in house, quarantine 
-    infl = np.histogram(cpco,np.arange(1,maxhh+1))[0]   # presymptomatic and asymptomatic for food lines
-    allfl = np.histogram(apco,np.arange(1,maxhh+1))[0]  # All people in food lines
-    infls = np.histogram(cpcos,np.arange(1,maxhh+1))[0] # All sedentaries for local transmission
-    inflw = np.histogram(cpcow,np.arange(1,maxhh+1))[0] # All wanderers for local transmission    
+    
+    infh = accumarray(pop_9[:,0],cpih)   # All infected in house and at toilets, population 
+    infhq = accumarray(pop_9[:,0],cpihq) # All infected in house, quarantine 
+    infl = accumarray(pop_9[:,0],cpco)   # presymptomatic and asymptomatic for food lines
+    allfl = accumarray(pop_9[:,0],apco)  # All people in food lines
+    infls = accumarray(pop_9[:,0],cpcos) # All sedentaries for local transmission
+    inflw = accumarray(pop_9[:,0],cpcow) # All wanderers for local transmission      
     ##########################################################    
     
     ##########################################################
