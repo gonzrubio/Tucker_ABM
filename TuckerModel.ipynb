@@ -878,7 +878,7 @@ for i in range(d2s):
 
     # Assign people to cases severe enough to be hospitalised (using pick_sick from above)
     # First, everyone who is symptomatic in quarentine (10) progresses to at least mild in quarentine (11).
-    pop_9[((pop_9[:,1]==10)+(pop_9[:,3]==6))==2,2] = 11
+    pop_9[((pop_9[:,1]==10)+(pop_9[:,3]==6))==2,1] = 11
     
     for sci in range(len(asp)-1):
         thosp = thosp + np.sum((pop_9[:,1]==11)+(pop_9[:,3]==6)+(pick_sick<asp[sci])+
@@ -901,7 +901,7 @@ for i in range(d2s):
     pop_9[idxpresym,3] = np.zeros((pop_9[idxpresym,3].shape))
     
     # Move to exposed to presymptomatic
-    pop_9[((pop_9[:,1] == 8)+(pop_9[:,3] >= np.floor(0.5*pop_9[:,2])))==2,1] = 7    
+    pop_9[((pop_9[:,1] == 8)+(pop_9[:,3] >= np.floor(0.5*pop_9[:,2])))==2,1] = 9    
     
     #if sum(pop(:,2)==2)>0
     #    return
