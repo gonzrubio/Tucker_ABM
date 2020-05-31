@@ -34,7 +34,6 @@ from scipy import optimize
 
 
 #fix random seed for reproducibility
-
 np.random.seed(seed=42)
 
 
@@ -63,7 +62,6 @@ N = Nb + Nt                 # Total population.
 
 path_to_file = 'age_and_sex.csv'            # Observed data.
 age_and_sex = pd.read_csv(path_to_file)     # Data frame. V1 = age, V2 is sex (1 = male?, 0  = female?).
-#type(age_and_sex)
 
 # Remove "Unamed column" and preview.
 age_and_sex = age_and_sex.loc[:, ~age_and_sex.columns.str.contains('^Unnamed')]
@@ -75,9 +73,6 @@ age_and_sex.head()
 
 print(age_and_sex.describe())     # Summary stats.
 age_and_sex = age_and_sex.values  # dataframe to 2D array.
-#type(age_and_sex)
-#age_and_sex[:5,]
-
 
 # ### Transmission parameters
 
@@ -145,9 +140,6 @@ lrtol = 0.02     # Scale interactions - two people with completely overlapping r
 
 
 rN = np.concatenate((np.ceil(hb*np.random.uniform(0,1,Nb)), hb+np.ceil(ht*np.random.uniform(0,1,Nt)))) 
-plt.hist(rN,bins='auto')
-plt.show()
-
 U,ui = np.unique(rN, return_inverse=True)  # ui - indices from the unique sorted array that would reconstruct rN
 assert U[ui].all() == rN.all()
 
@@ -208,16 +200,16 @@ np.min(rN)
 # In[30]:
 
 
-fig = plt.figure(figsize=(15,8))
-ax1 = fig.add_subplot(121)
-ax1.set_ylabel('Number of individuals')
-ax1.set_xlabel('Isobox number in the camp')
-ax1.hist(rN[:Nb+1], bins=np.arange(1,hb+1))
-ax2 = fig.add_subplot(122)
-ax2.set_ylabel('Number of individuals')
-ax2.set_xlabel('Tent number in the camp')
-ax2.hist(rN[Nb+1:], bins=np.arange(1,ht+1))
-plt.show()
+#fig = plt.figure(figsize=(15,8))
+#ax1 = fig.add_subplot(121)
+#ax1.set_ylabel('Number of individuals')
+#ax1.set_xlabel('Isobox number in the camp')
+#ax1.hist(rN[:Nb+1], bins=np.arange(1,hb+1))
+#ax2 = fig.add_subplot(122)
+#ax2.set_ylabel('Number of individuals')
+#ax2.set_xlabel('Tent number in the camp')
+#ax2.hist(rN[Nb+1:], bins=np.arange(1,ht+1))
+#plt.show()
 
 
 # #### Columns 2-4 (symptoms)
@@ -278,18 +270,18 @@ assert pop_7.shape==(18700, 7)
 # In[36]:
 
 
-plt.hist(pop_7[:,5],bins='auto')
-plt.xlabel('age')
-plt.show()
+#plt.hist(pop_7[:,5],bins='auto')
+#plt.xlabel('age')
+#plt.show()
 
 
 # In[37]:
 
 
-plt.hist(pop_7[:,6], bins=[-0.5,0.5,1.5], ec="k")
-plt.xticks((0,1))
-plt.xlabel('Sex. Male = 1')
-plt.show()
+#plt.hist(pop_7[:,6], bins=[-0.5,0.5,1.5], ec="k")
+#plt.xticks((0,1))
+#plt.xlabel('Sex. Male = 1')
+#plt.show()
 
 
 # #### Column 7-8 (Chronic States and wanderers)
@@ -317,8 +309,8 @@ print(xopt)
 
 x_s= np.linspace(-5, 5, 201)
 y=[myfunction(x) for x in x_s]
-plt.plot(x_s, y,xopt,myfunction(xopt),'r+')
-plt.show()
+#plt.plot(x_s, y,xopt,myfunction(xopt),'r+')
+#plt.show()
 
 
 # In[40]:
@@ -336,18 +328,18 @@ assert pop_8.shape==(18700, 8)
 
 
 chroncases[np.where(chroncases == 1)]
-plt.hist(chroncases.astype(int),bins='auto')
-plt.title('Number of People with chronic conditions')
-plt.show()
+#plt.hist(chroncases.astype(int),bins='auto')
+#plt.title('Number of People with chronic conditions')
+#plt.show()
 
 
 # In[42]:
 
 
 print(np.sum(chroncases))
-plt.hist(chroncases[np.where(chroncases == 1)],bins='auto')
-plt.title("Number of People with chronic conditions")
-plt.show()
+#plt.hist(chroncases[np.where(chroncases == 1)],bins='auto')
+#plt.title("Number of People with chronic conditions")
+#plt.show()
 
 
 # In[43]:
@@ -385,16 +377,16 @@ print(pop_9[-1,0]) # Index of last house, so house number is index +1
 
 # Assign x and y coordinates to isoboxes (there are hb total isoboxes). 
 hhloc1 = 0.5*(1-np.sqrt(iba)) + np.sqrt(iba)*np.random.uniform(0,1,(int(hb),2))
-plt.scatter(hhloc1[:,0], hhloc1[:,1],facecolors='none', edgecolors='b')
-plt.title('Isoboxes')
-plt.show()
+#plt.scatter(hhloc1[:,0], hhloc1[:,1],facecolors='none', edgecolors='b')
+#plt.title('Isoboxes')
+#plt.show()
 
 # Repeat for tents.
 #hhloc2 = np.random.uniform(0,1,(int(ht),2))
 hhloc2 = np.random.uniform(0,1,(int(pop_9[N-1,0]-pop_9[Nb-1,0]),2)) # Note: Nb-1 and N-1 to account for zero-indexing.
-plt.scatter(hhloc2[:,0], hhloc2[:,1],facecolors='none', edgecolors='r')
-plt.title('Tents')
-plt.show()
+#plt.scatter(hhloc2[:,0], hhloc2[:,1],facecolors='none', edgecolors='r')
+#plt.title('Tents')
+#plt.show()
 
 assert (hhloc1.shape[0]+hhloc2.shape[0] == maxhh)
 
@@ -404,8 +396,8 @@ assert (hhloc1.shape[0]+hhloc2.shape[0] == maxhh)
 
 # Randomly move tents to the edges of the camp. Assign weights to them.
 hhloc2w = np.ceil(4*np.random.uniform(0,1,(int(pop_9[N-1,0]-pop_9[Nb-1,0]),1)))
-plt.hist(hhloc2w)
-plt.show()
+#plt.hist(hhloc2w)
+#plt.show()
 
 assert len(hhloc2w) == hhloc2.shape[0]
 
@@ -427,9 +419,9 @@ shift = 0.5*(1-np.sqrt(iba))
 hhloc2[np.where(hhloc2w==1),0] = 1+shift*(hhloc2[np.where(hhloc2w == 1),0]-1)
 hhloc2[np.where(hhloc2w==1),1] = (1-shift)*hhloc2[np.where(hhloc2w == 1),1]
 
-plt.scatter(hhloc2[:,0],hhloc2[:,1],facecolors='none', edgecolors='r')
-plt.title('Tents')
-plt.show()
+#plt.scatter(hhloc2[:,0],hhloc2[:,1],facecolors='none', edgecolors='r')
+#plt.title('Tents')
+#plt.show()
 
 
 # In[48]:
@@ -444,9 +436,9 @@ plt.show()
 hhloc2[np.where(hhloc2w==2),0] = hhloc2[np.where(hhloc2w == 2),0]*(1-shift)+shift
 hhloc2[np.where(hhloc2w==2),1] = 1+shift*(hhloc2[np.where(hhloc2w == 2),1]-1)
 
-plt.scatter(hhloc2[:,0],hhloc2[:,1],facecolors='none', edgecolors='r')
-plt.title('Tents')
-plt.show()
+#plt.scatter(hhloc2[:,0],hhloc2[:,1],facecolors='none', edgecolors='r')
+#plt.title('Tents')
+#plt.show()
 
 
 # In[49]:
@@ -460,10 +452,10 @@ plt.show()
 
 hhloc2[np.where(hhloc2w==3),0] = shift*hhloc2[np.where(hhloc2w == 3),0]
 hhloc2[np.where(hhloc2w==3),1] = hhloc2[np.where(hhloc2w == 3),1]*(1-shift)+shift
-
-plt.scatter(hhloc2[:,0],hhloc2[:,1],facecolors='none', edgecolors='r')
-plt.title('Tents')
-plt.show()
+#
+#plt.scatter(hhloc2[:,0],hhloc2[:,1],facecolors='none', edgecolors='r')
+#plt.title('Tents')
+#plt.show()
 
 
 # In[50]:
@@ -478,21 +470,21 @@ plt.show()
 hhloc2[np.where(hhloc2w==4),0] = (1-shift)*hhloc2[np.where(hhloc2w == 4),0]
 hhloc2[np.where(hhloc2w==4),1] = shift*hhloc2[np.where(hhloc2w == 4),1]
 
-plt.scatter(hhloc2[:,0],hhloc2[:,1],facecolors='none', edgecolors='r')
-plt.title('Tents')
-plt.show()
+#plt.scatter(hhloc2[:,0],hhloc2[:,1],facecolors='none', edgecolors='r')
+#plt.title('Tents')
+#plt.show()
 
 
 # In[51]:
 
 
-fig = plt.figure()
-ax1 = fig.add_subplot(111)
-
-ax1.scatter(hhloc2[:,0],hhloc2[:,1],facecolors='none', edgecolors='r', label='Tents')
-ax1.scatter(hhloc1[:,0],hhloc1[:,1],facecolors='none', edgecolors='b', label='Isoboxes')
-plt.legend(loc='upper left');
-plt.show()
+#fig = plt.figure()
+#ax1 = fig.add_subplot(111)
+#
+#ax1.scatter(hhloc2[:,0],hhloc2[:,1],facecolors='none', edgecolors='r', label='Tents')
+#ax1.scatter(hhloc1[:,0],hhloc1[:,1],facecolors='none', edgecolors='b', label='Isoboxes')
+#plt.legend(loc='upper left');
+#plt.show()
 
 hhloc = np.vstack((hhloc1,hhloc2)) 
 assert hhloc.shape[0] == maxhh
@@ -533,18 +525,18 @@ tu = N/tgroups                    # ~ people / toilet
 assert np.max(tnum) == np.prod(tblocks)
 assert tshared.shape == (maxhh,maxhh)
 
-plt.hist(tnum)
-plt.ylabel('Households')
-plt.xlabel('Toilet number')
-plt.show()
+#plt.hist(tnum)
+#plt.ylabel('Households')
+#plt.xlabel('Toilet number')
+#plt.show()
 
-fig=plt.figure(figsize=(9, 8), dpi= 80, facecolor='w', edgecolor='k')
-plt.imshow(tshared)
-plt.title('Shared toilets')
-plt.xlabel('Household number')
-plt.ylabel('Household number')
-plt.colorbar()
-plt.show()
+#fig=plt.figure(figsize=(9, 8), dpi= 80, facecolor='w', edgecolor='k')
+#plt.imshow(tshared)
+#plt.title('Shared toilets')
+#plt.xlabel('Household number')
+#plt.ylabel('Household number')
+#plt.colorbar()
+#plt.show()
 
 
 # ### Create ethnic groups
@@ -585,10 +577,10 @@ for i in range(len(g)):
     hheth[hhunass[cloind[0:int(g[i])],0].astype(int)] = i  # Assign i-th ethnic group to those households.
     hhunass = np.delete(hhunass,cloind[0:int(g[i])],0)     # Remove those hoseholds (remove the i-th cluster/ethnic group)
     
-plt.hist(hheth)
-plt.ylabel('Households per cluster ')
-plt.xlabel('Ethnic group number (cluster)')
-plt.show()
+#plt.hist(hheth)
+#plt.ylabel('Households per cluster ')
+#plt.xlabel('Ethnic group number (cluster)')
+#plt.show()
 
 
 # In[56]:
@@ -607,9 +599,9 @@ plt.show()
 ethmatch = ( np.tile(hheth,(1,len(hheth))) ==  np.tile(hheth,(1,len(hheth))).T )
 ethcor = ethmatch+ss*(1-ethmatch)
 
-plt.imshow( ethcor )
-plt.colorbar()
-plt.show()
+#plt.imshow( ethcor )
+#plt.colorbar()
+#plt.show()
 
 
 # ### Create interaction rates
@@ -672,22 +664,22 @@ def make_obs_180420(fblocks,lr1,lr2,N,hhloc,maxhh,lrtol,ethcor):
 
 
 fshared, lis = make_obs_180420(fblocks,lr1,lr2,N,hhloc,maxhh,lrtol,ethcor)
-plt.imshow(fshared)
-plt.title('Shared food lines')
-plt.xlabel('Household number')
-plt.ylabel('Household number')
-plt.colorbar()
-plt.show()
+#plt.imshow(fshared)
+#plt.title('Shared food lines')
+#plt.xlabel('Household number')
+#plt.ylabel('Household number')
+#plt.colorbar()
+#plt.show()
 
 
 # In[59]:
 
 
-fig, ax = plt.subplots(1,3, sharex=True, figsize=(50,100))
-ax[0].imshow(lis[:,:,0])
-ax[1].imshow(lis[:,:,1])
-ax[2].imshow(lis[:,:,2])
-plt.show()
+#fig, ax = plt.subplots(1,3, sharex=True, figsize=(50,100))
+#ax[0].imshow(lis[:,:,0])
+#ax[1].imshow(lis[:,:,1])
+#ax[2].imshow(lis[:,:,2])
+#plt.show()
 
 
 # ### Simulate infection dynamics
@@ -930,12 +922,12 @@ for i in range(d2s):
     ##########################################################
     # COMPUTE INFEECTED PEOPLE PER HOUSEHOLD.
     # There is some bug in here.
-    infh = np.histogram(cpih,np.arange(maxhh+1))[0]   # All infected in house and at toilets, population 
-    infhq = np.histogram(cpihq,np.arange(maxhh+1))[0] # All infected in house, quarantine 
-    infl = np.histogram(cpco,np.arange(maxhh+1))[0]   # presymptomatic and asymptomatic for food lines
-    allfl = np.histogram(apco,np.arange(maxhh+1))[0]  # All people in food lines
-    infls = np.histogram(cpcos,np.arange(maxhh+1))[0] # All sedentaries for local transmission
-    inflw = np.histogram(cpcow,np.arange(maxhh+1))[0] # All wanderers for local transmission    
+    infh = np.histogram(cpih,np.arange(1,maxhh+1))[0]   # All infected in house and at toilets, population 
+    infhq = np.histogram(cpihq,np.arange(1,maxhh+1))[0] # All infected in house, quarantine 
+    infl = np.histogram(cpco,np.arange(1,maxhh+1))[0]   # presymptomatic and asymptomatic for food lines
+    allfl = np.histogram(apco,np.arange(1,maxhh+1))[0]  # All people in food lines
+    infls = np.histogram(cpcos,np.arange(1,maxhh+1))[0] # All sedentaries for local transmission
+    inflw = np.histogram(cpcow,np.arange(1,maxhh+1))[0] # All wanderers for local transmission    
     ##########################################################    
     
     ##########################################################
