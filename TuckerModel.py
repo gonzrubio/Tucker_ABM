@@ -713,11 +713,6 @@ plt.show()
 def isFinished(states,iteration):
     '''Counts the number of individuals who are not suceptible or recovered.'''
     return (np.sum(states) == 0 and 10 < iteration)
-    
-#def isFinished(states,iteration,N):
-    #'''Counts the number of suceptible and recovered '''
-    #return  (np.sum(states) == N and 10 > iteration) 
-
 
 # In[67]:
 
@@ -903,9 +898,6 @@ for i in range(d2s):
     # Move to exposed to presymptomatic
     pop_9[((pop_9[:,1] == 8)+(pop_9[:,3] >= np.floor(0.5*pop_9[:,2])))==2,1] = 9    
     
-    #if sum(pop(:,2)==2)>0
-    #    return
-    #end    
     ##########################################################
     
     ##########################################################
