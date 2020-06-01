@@ -27,9 +27,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import math 
-import scipy
 from scipy import optimize
-#from scipy.misc import factorial
+from scipy.special import factorial
 
 # In[14]:
 
@@ -944,8 +943,8 @@ for i in range(d2s):
     # CHECK THIS MI-DRUN !!!
     
     # Compute proportions infecteds at toilets and in food lines
-    pitoil = (tshared.dot(infh))/(tshared.dot(pph)) # bug in infh calculation
-    pifl = (fshared.dot(infl))/(fshared.dot(allfl)) # bug in infl calculation
+    pitoil = (tshared.dot(infh))/(tshared.dot(pph)) 
+    pifl = (fshared.dot(infl))/(fshared.dot(allfl)) 
     
     # Compute transmission at toilets by household (There is an erro when calculating pitoil and pitfl above).
     tmp = 0
@@ -955,11 +954,19 @@ for i in range(d2s):
     
     # Compute transmission in food lines by household.
     # Assume each person goes to the food line once per day on 75% of days.
-    # Other days someone brings food to them (with no additional contact).   
-    trans_in_fl = 0
-    for i in np.arange(3) :
-        trans_in_fl += (0.75)*(1-2*(math.factorial(2-i)*math.factorial(i))**-1*((1-pifl)**(2-i))*(pifl**i)*(1-aip*tr)**i)    
+    # Other days someone brings food to them (with no additional contact).
     
+    # NOTE: Went for Matrices/Linear Algebra approach. Wonwering if loops might be more efficient.
+    # I also match the exact dimensions as MATLAB code but since python doesn't know what a colum
+    # vector is, Im think it might be better to deal with deaful python arrays and transpose at the end.
+    # For now, I wantr to get the same results as the original code.
+    
+    xi = np.arange(3)
+    trans_in_fl = 0.75*(1-factorial(2)*np.sum(((factorial(2-xi)*factorial(xi))**-1)*
+                                   (np.transpose(np.array([(1-pifl)**(2-i) for i in xi])))*
+                                   (np.transpose(np.array([pifl**i for i in xi])))*
+                                   (np.power(1-aip*tr,xi)),1))
+
     # Households in quarantine don't get these exposures, but that is taken care of below
     # because this is applied only to susceptibles in the population with these, we can calculate
     # the probability of all transmissions that calculated at the household level.
