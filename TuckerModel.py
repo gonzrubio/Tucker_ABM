@@ -27,8 +27,9 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import math 
+import scipy
 from scipy import optimize
-
+#from scipy.misc import factorial
 
 # In[14]:
 
