@@ -723,13 +723,15 @@ thosp = 0 # Total number of hospitalized individuals.
 
 # In[68]:
 
-
+## Check if we need to adjust for zero indexing.
+## Days to symptoms column doesnt have same distribution as in MATLAB code.
+## Fix addition of booleans, maybe change to logical &.
 for i in range(d2s):
     '''print("Iteration:",i)
     print(op)
     print(isFinished(track_states[0,[0,6]],N,i))'''
     
-    print("Day:"i+1)
+    print("Day:",i)
     # Record states (disease progession)
     track_states[i,:] = np.histogram(pop_9[:,1], bins=np.arange(nCat+1))[0] 
     
@@ -740,7 +742,7 @@ for i in range(d2s):
     
     # Check to see if epidemic has stopped.
     if isFinished(np.concatenate((track_states[i,1:6],track_states[i,7:nCat])),i):
-        print("Epidemic ended on day:",i+1)
+        print("Epidemic ended on day:",i)
         break
         
     ########################################################## 
@@ -761,7 +763,7 @@ for i in range(d2s):
     '''
     
     # Short circut logical and since we have not yet defined cpih and cpco.
-    if ((op == 1) and (i > 1) and (((sum(cpih)-sum(cpco))/N) > 1)):
+    if ((op == 1) and (i > 1) and (((sum(cpih)-sum(cpco))/N) > -1)):
         #print('Do we hit this update?')
         print("Introduced new interventions on a cue/queue on iteration #",i)
         iat1 = i
@@ -800,11 +802,11 @@ for i in range(d2s):
     # Assigned to recovered state (mild and severe (recovery could be death) symptoms)
     mild_rec = np.random.uniform(0,1,N) > math.exp(0.2*math.log(0.1))   # Liu et al 2020 The Lancet.
     sev_rec = np.random.uniform(0,1,N) > math.exp(math.log(63/153)/12)  # Cai et al.
-    pop_9[np.where((pop_9[:,1]==4)+mild_rec==2), 1] = 6                  # Mild symptoms and recovered.
-    pop_9[np.where((pop_9[:,1]==5)+sev_rec==2), 1] = 6                   # Severe symptoms and recovered.
+    pop_9[np.where(((pop_9[:,1]==4)+mild_rec)==2), 1] = 6                  # Mild symptoms and recovered.
+    pop_9[np.where(((pop_9[:,1]==5)+sev_rec)==2), 1] = 6                   # Severe symptoms and recovered.    
     
     pick_sick = np.random.uniform(0,1,N)                            # Get random numbers to determine health states.
-    pop_9[(pop_9[:,1]==3)+(pop_9[:,3]==6),1] = 4                    # If 6 days as symptomatic, move to state mild.
+    pop_9[((pop_9[:,1]==3)+(pop_9[:,3]==6))==2,1] = 4                    # If 6 days as symptomatic, move to state mild.
 
     asp = np.array([0,.000408,.0104,.0343,.0425,.0816,.118,.166,.184])        # Verity et al. hospitalisation
     aspc = np.array([.0101,.0209,.0410,.0642,.0721,.2173,.2483,.6921,.6987])  # Verity et al. corrected for Tuite    
@@ -829,8 +831,8 @@ for i in range(d2s):
     pop_9[idxpresym,3] = np.zeros((pop_9[idxpresym,3].shape))
     
     # Move to exposed to presymptomatic
-    pop_9[((pop_9[:,1] == 1)+(pop_9[:,3] >= np.floor(0.5*pop_9[:,2])))==2,1] = 2
-    ######################################################### 
+    pop_9[(pop_9[:,1] == 1)&(pop_9[:,3] >= np.floor(0.5*pop_9[:,2])),1] = 2
+    ########################################################## 
     
     ##########################################################  
     # UPDATE IN QUARANTINE. See notes from population.
