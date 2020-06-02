@@ -729,40 +729,19 @@ for i in range(d2s):
     print(op)
     print(isFinished(track_states[0,[0,6]],N,i))'''
     
-    print("Day:",i+1)
+    print("Day:"i+1)
     # Record states (disease progession)
     track_states[i,:] = np.histogram(pop_9[:,1], bins=np.arange(nCat+1))[0] 
+    
+    #ax.imshow(track_states)    
+    #%matplotlib qt
+#    plt.imshow(track_states, extent=[0, 1, 0, 1])
+#    plt.show()
     
     # Check to see if epidemic has stopped.
     if isFinished(np.concatenate((track_states[i,1:6],track_states[i,7:nCat])),i):
         print("Epidemic ended on day:",i+1)
         break
-        
-    ##########################################################
-#    # IDENTIFY CONTAGIOUS AND ACTVE PEOPLE IN DIFFERENT CONTEXTS
-#    # Contagious in the house and at toilets, in population.  
-#    # At least presymptomatic AND at most severe.
-#    cpih = np.logical_and(pop_9[:,1] > 1, pop_9[:,1] < 6)  
-#    
-#    # Contagious in the house, in quarantine.
-#    # At least presymptomatic in quarentine AND at most severe in quarentine.
-#    cpihq = np.logical_and(pop_9[:,1]>8, pop_9[:,1]<13)    
-#    
-#    # Contagious at large in the population (all - for food lines)    
-#    # Presymptomatic OR (at least symptomatic AND at most mild AND asymptomatic) OR less than 16 years old.
-#    cpco = np.logical_or(pop_9[:,1]==2, np.logical_and(pop_9[:,1]>2, pop_9[:,1]<5, pop_9[:,4]==1), pop_9[:,5]<16)    
-#    
-#    # All at large in the population (all - for food lines). 
-#    # cpco OR (susceptible or exposed) OR recovered.
-#    apco = np.logical_or(cpco==True,pop_9[:,1]<2, pop_9[:,1]==6)
-#    
-#    # Contagious at large in the population (sedentaries).
-#    # cpco OR not wanderers.
-#    cpcos = np.logical_and(cpco==True,pop_9[:,8]==False)
-#    
-#    # Contagious at large in the population (wanderers).
-#    # cpco OR wanderers.
-#    cpcow = np.logical_and(cpco==True,pop_9[:,8]==True)
         
     ########################################################## 
     # Introduce new interventions on a cue (queue?).
