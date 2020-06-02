@@ -729,7 +729,7 @@ for i in range(d2s):
     print(op)
     print(isFinished(track_states[0,[0,6]],N,i))'''
     
-    print("Day:"i+1)
+    print(f"Day:{i+1}")
     # Record states (disease progession)
     track_states[i,:] = np.histogram(pop_9[:,1], bins=np.arange(nCat+1))[0] 
     
