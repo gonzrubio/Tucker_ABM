@@ -156,6 +156,8 @@ while finished==0
     
     %Record states
     track_states(i,:)=hist(pop(:,2),0:13);
+%     figure
+%     imagesc(track_states) ;
     
     %Check to see if the epidemic has ended (and stop)
     if i==d2s

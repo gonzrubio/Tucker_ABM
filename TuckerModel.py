@@ -27,9 +27,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import math 
-import scipy
 from scipy import optimize
-#from scipy.misc import factorial
+from scipy.special import factorial
 
 # In[14]:
 
@@ -724,46 +723,31 @@ thosp = 0 # Total number of hospitalized individuals.
 
 # In[68]:
 
-
+## Check if we need to adjust for zero indexing.
+## Days to symptoms column doesnt have same distribution as in MATLAB code.
+## Fix addition of booleans, maybe change to logical &.
 for i in range(d2s):
     '''print("Iteration:",i)
     print(op)
     print(isFinished(track_states[0,[0,6]],N,i))'''
     
-    print("Day:",i+1)
+<<<<<<< HEAD
+    print("Day:",i)
+=======
+    print(f"Day:{i+1}")
+>>>>>>> 18d130638b22acf46cbe8ec59bd11a6233b8c9cd
     # Record states (disease progession)
-    track_states[0,:] = np.histogram(pop_9[:,1], bins=np.arange(nCat+1))[0] 
+    track_states[i,:] = np.histogram(pop_9[:,1], bins=np.arange(nCat+1))[0] 
+    
+    #ax.imshow(track_states)    
+    #%matplotlib qt
+#    plt.imshow(track_states, extent=[0, 1, 0, 1])
+#    plt.show()
     
     # Check to see if epidemic has stopped.
     if isFinished(np.concatenate((track_states[i,1:6],track_states[i,7:nCat])),i):
-        print("Epidemic ended on day:",i+1)
+        print("Epidemic ended on day:",i)
         break
-        
-    ##########################################################
-#    # IDENTIFY CONTAGIOUS AND ACTVE PEOPLE IN DIFFERENT CONTEXTS
-#    # Contagious in the house and at toilets, in population.  
-#    # At least presymptomatic AND at most severe.
-#    cpih = np.logical_and(pop_9[:,1] > 1, pop_9[:,1] < 6)  
-#    
-#    # Contagious in the house, in quarantine.
-#    # At least presymptomatic in quarentine AND at most severe in quarentine.
-#    cpihq = np.logical_and(pop_9[:,1]>8, pop_9[:,1]<13)    
-#    
-#    # Contagious at large in the population (all - for food lines)    
-#    # Presymptomatic OR (at least symptomatic AND at most mild AND asymptomatic) OR less than 16 years old.
-#    cpco = np.logical_or(pop_9[:,1]==2, np.logical_and(pop_9[:,1]>2, pop_9[:,1]<5, pop_9[:,4]==1), pop_9[:,5]<16)    
-#    
-#    # All at large in the population (all - for food lines). 
-#    # cpco OR (susceptible or exposed) OR recovered.
-#    apco = np.logical_or(cpco==True,pop_9[:,1]<2, pop_9[:,1]==6)
-#    
-#    # Contagious at large in the population (sedentaries).
-#    # cpco OR not wanderers.
-#    cpcos = np.logical_and(cpco==True,pop_9[:,8]==False)
-#    
-#    # Contagious at large in the population (wanderers).
-#    # cpco OR wanderers.
-#    cpcow = np.logical_and(cpco==True,pop_9[:,8]==True)
         
     ########################################################## 
     # Introduce new interventions on a cue (queue?).
@@ -783,7 +767,7 @@ for i in range(d2s):
     '''
     
     # Short circut logical and since we have not yet defined cpih and cpco.
-    if ((op == 1) and (i > 1) and (((sum(cpih)-sum(cpco))/N) > 1)):
+    if ((op == 1) and (i > 1) and (((sum(cpih)-sum(cpco))/N) > -1)):
         #print('Do we hit this update?')
         print("Introduced new interventions on a cue/queue on iteration #",i)
         iat1 = i
@@ -822,11 +806,11 @@ for i in range(d2s):
     # Assigned to recovered state (mild and severe (recovery could be death) symptoms)
     mild_rec = np.random.uniform(0,1,N) > math.exp(0.2*math.log(0.1))   # Liu et al 2020 The Lancet.
     sev_rec = np.random.uniform(0,1,N) > math.exp(math.log(63/153)/12)  # Cai et al.
-    pop_9[np.where((pop_9[:,1]==4)+mild_rec==2), 1] = 6                  # Mild symptoms and recovered.
-    pop_9[np.where((pop_9[:,1]==5)+sev_rec==2), 1] = 6                   # Severe symptoms and recovered.
+    pop_9[np.where(((pop_9[:,1]==4)+mild_rec)==2), 1] = 6                  # Mild symptoms and recovered.
+    pop_9[np.where(((pop_9[:,1]==5)+sev_rec)==2), 1] = 6                   # Severe symptoms and recovered.    
     
     pick_sick = np.random.uniform(0,1,N)                            # Get random numbers to determine health states.
-    pop_9[(pop_9[:,1]==3)+(pop_9[:,3]==6),1] = 4                    # If 6 days as symptomatic, move to state mild.
+    pop_9[((pop_9[:,1]==3)+(pop_9[:,3]==6))==2,1] = 4                    # If 6 days as symptomatic, move to state mild.
 
     asp = np.array([0,.000408,.0104,.0343,.0425,.0816,.118,.166,.184])        # Verity et al. hospitalisation
     aspc = np.array([.0101,.0209,.0410,.0642,.0721,.2173,.2483,.6921,.6987])  # Verity et al. corrected for Tuite    
@@ -851,8 +835,8 @@ for i in range(d2s):
     pop_9[idxpresym,3] = np.zeros((pop_9[idxpresym,3].shape))
     
     # Move to exposed to presymptomatic
-    pop_9[((pop_9[:,1] == 1)+(pop_9[:,3] >= np.floor(0.5*pop_9[:,2])))==2,1] = 2
-    ######################################################### 
+    pop_9[(pop_9[:,1] == 1)&(pop_9[:,3] >= np.floor(0.5*pop_9[:,2])),1] = 2
+    ########################################################## 
     
     ##########################################################  
     # UPDATE IN QUARANTINE. See notes from population.
@@ -944,8 +928,8 @@ for i in range(d2s):
     # CHECK THIS MI-DRUN !!!
     
     # Compute proportions infecteds at toilets and in food lines
-    pitoil = (tshared.dot(infh))/(tshared.dot(pph)) # bug in infh calculation
-    pifl = (fshared.dot(infl))/(fshared.dot(allfl)) # bug in infl calculation
+    pitoil = (tshared.dot(infh))/(tshared.dot(pph)) 
+    pifl = (fshared.dot(infl))/(fshared.dot(allfl)) 
     
     # Compute transmission at toilets by household (There is an erro when calculating pitoil and pitfl above).
     tmp = 0
@@ -955,11 +939,19 @@ for i in range(d2s):
     
     # Compute transmission in food lines by household.
     # Assume each person goes to the food line once per day on 75% of days.
-    # Other days someone brings food to them (with no additional contact).   
-    trans_in_fl = 0
-    for i in np.arange(3) :
-        trans_in_fl += (0.75)*(1-2*(math.factorial(2-i)*math.factorial(i))**-1*((1-pifl)**(2-i))*(pifl**i)*(1-aip*tr)**i)    
+    # Other days someone brings food to them (with no additional contact).
     
+    # NOTE: Went for Matrices/Linear Algebra approach. Wonwering if loops might be more efficient.
+    # I also match the exact dimensions as MATLAB code but since python doesn't know what a colum
+    # vector is, Im think it might be better to deal with deaful python arrays and transpose at the end.
+    # For now, I wantr to get the same results as the original code.
+    
+    xi = np.arange(3)
+    trans_in_fl = 0.75*(1-factorial(2)*np.sum(((factorial(2-xi)*factorial(xi))**-1)*
+                                   (np.transpose(np.array([(1-pifl)**(2-i) for i in xi])))*
+                                   (np.transpose(np.array([pifl**i for i in xi])))*
+                                   (np.power(1-aip*tr,xi)),1))
+
     # Households in quarantine don't get these exposures, but that is taken care of below
     # because this is applied only to susceptibles in the population with these, we can calculate
     # the probability of all transmissions that calculated at the household level.
