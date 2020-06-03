@@ -726,23 +726,15 @@ thosp = 0 # Total number of hospitalized individuals.
 ## Check if we need to adjust for zero indexing.
 ## Days to symptoms column doesnt have same distribution as in MATLAB code.
 ## Fix addition of booleans, maybe change to logical &.
-for i in range(d2s):
-    '''print("Iteration:",i)
-    print(op)
-    print(isFinished(track_states[0,[0,6]],N,i))'''
-    
-<<<<<<< HEAD
-    print("Day:",i)
-=======
+for i in range(d2s):   
+#<<<<<<< HEAD
+    #print("Day:",i)
+#=======
     print(f"Day:{i+1}")
->>>>>>> 18d130638b22acf46cbe8ec59bd11a6233b8c9cd
+#>>>>>>> 18d130638b22acf46cbe8ec59bd11a6233b8c9cd
+
     # Record states (disease progession)
     track_states[i,:] = np.histogram(pop_9[:,1], bins=np.arange(nCat+1))[0] 
-    
-    #ax.imshow(track_states)    
-    #%matplotlib qt
-#    plt.imshow(track_states, extent=[0, 1, 0, 1])
-#    plt.show()
     
     # Check to see if epidemic has stopped.
     if isFinished(np.concatenate((track_states[i,1:6],track_states[i,7:nCat])),i):
@@ -751,24 +743,8 @@ for i in range(d2s):
         
     ########################################################## 
     # Introduce new interventions on a cue (queue?).
-    '''
-    if (op==1 & i>1 & (sum(cpih)-sum(cpco))/N>-1)
-        iat1=i
-        op=0;
-        lr1=0.001;
-        fblocks=[12,12];
-        tr=.25;
-        [fshared,lis]=make_obs_180420(fblocks,lr1,lr2,N,hhloc,maxhh,lrtol,ethcor);
-        %set rate for people to violate lockdown
-        %assume people who violate do so at lr2
-        viol_rate=0.05;
-        pop(:,9)=(rand(N,1)<viol_rate);
-    end
-    '''
-    
-    # Short circut logical and since we have not yet defined cpih and cpco.
-    if ((op == 1) and (i > 1) and (((sum(cpih)-sum(cpco))/N) > -1)):
-        #print('Do we hit this update?')
+
+    if ((op == 1) and (i > 0) and (((sum(cpih)-sum(cpco))/N) > -1)): 
         print("Introduced new interventions on a cue/queue on iteration #",i)
         iat1 = i
         op = 0
@@ -776,18 +752,19 @@ for i in range(d2s):
         fblocks = [12,12]
         tr = 0.25
         fshared, lis = make_obs_180420(fblocks, lr1, lr2, N, hhloc, maxhh, lrtol, ethcor)
-        viol_rate = 0.05
+        viol_rate = 0.05 # Rate to violate lockdown. Assume they do so at lr2.
         pop_9[:, 8] = np.where(np.random.rand(N) < 0.05, 1, 0)
     ########################################################## 
         
     ########################################################## 
-    # UPDATE DISEASE TRACKING.
-    # Add day since exposure or symptoms (if not unexposed).
-    pop_9[:,3] = pop_9[:,3] + (pop_9[:,1]>0)         
+    # UPDATE DISEASE TRACKING - Add day since exposure or symptoms (if not unexposed). 
+   
+    pop_9[np.where(pop_9[:,1]>0),3] += 1     
     ########################################################## 
     
     ########################################################## 
     # UPDATE IN POPULATION.
+    
     # Assign people to cases severe enough to be hospitalised. These rates are age speific.
     # We will multiple Verity's rates by 1/(1-0.179) and only allow symptomatic people to be hospitalised,
     # to avoid changing the proportion of asymptomatic infections in the population.
@@ -803,57 +780,57 @@ for i in range(d2s):
     # Furthermore, at this point we lack any data at all on how severely COVID-19 may affect populations that
     # are initially malnourished or otherwise in poor condition.  
     
-    # Assigned to recovered state (mild and severe (recovery could be death) symptoms)
+    # Assigned to recovered state (mild and severe (recovery could be death) symptoms).
     mild_rec = np.random.uniform(0,1,N) > math.exp(0.2*math.log(0.1))   # Liu et al 2020 The Lancet.
     sev_rec = np.random.uniform(0,1,N) > math.exp(math.log(63/153)/12)  # Cai et al.
-    pop_9[np.where(((pop_9[:,1]==4)+mild_rec)==2), 1] = 6                  # Mild symptoms and recovered.
-    pop_9[np.where(((pop_9[:,1]==5)+sev_rec)==2), 1] = 6                   # Severe symptoms and recovered.    
+    pop_9[(mild_rec)&(pop_9[:,1]==4),1] = 6                             # Mild symptoms and recovered.
+    pop_9[(sev_rec)&(pop_9[:,1]==5),1] = 6                              # Severe symptoms and recovered.    
     
-    pick_sick = np.random.uniform(0,1,N)                            # Get random numbers to determine health states.
-    pop_9[((pop_9[:,1]==3)+(pop_9[:,3]==6))==2,1] = 4                    # If 6 days as symptomatic, move to state mild.
+    pick_sick = np.random.uniform(0,1,N)                # Get random numbers to determine health states.
+    pop_9[(pop_9[:,3]==6)&(pop_9[:,3]==6),1] = 4        # Move individuals with 6 days of symptoms to mild.
 
-    asp = np.array([0,.000408,.0104,.0343,.0425,.0816,.118,.166,.184])        # Verity et al. hospitalisation
-    aspc = np.array([.0101,.0209,.0410,.0642,.0721,.2173,.2483,.6921,.6987])  # Verity et al. corrected for Tuite    
+    asp = np.array([0,.000408,.0104,.0343,.0425,.0816,.118,.166,.184])        # Verity et al. hospitalisation.
+    aspc = np.array([.0101,.0209,.0410,.0642,.0721,.2173,.2483,.6921,.6987])  # Verity et al. corrected for Tuite.    
     for sci in range(len(asp)-1):
-        thosp = thosp + np.sum((pop_9[:,1]==4)+(pop_9[:,3]==6)+(pick_sick<asp[sci])+
-                               (pop_9[:,5]>=10*sci)+(pop_9[:,5]<(10*sci+1)) == 5)
-        pop_9[(pop_9[:,1]==4)+(pop_9[:,3]==6)+(pick_sick<asp[sci])+(pop_9[:,5]>=10*sci)+
-            (pop_9[:,5]<(10*sci+1)) == 5,1] = 5
-        thosp = thosp + np.sum((pop_9[:,1]==4)+(pop_9[:,3]==6)+(pick_sick<aspc[sci])+
-                               (pop_9[:,5]>=10*sci)+(pop_9[:,5]<(10*sci+1))+(pop_9[:,7]==1)==6)
-        pop_9[(pop_9[:,1]==4)+(pop_9[:,3]==6)+(pick_sick<asp[sci])+(pop_9[:,5]>=10*sci)+
-            (pop_9[:,5]<(10*sci+1))+(pop_9[:,7]==1)==6,1]=5
+        # Assign individuals with mild symptoms for six days, sick, between 10*sci and 10*sci+1 years old to severe and count as hospitalized.
+        thosp += np.sum((pop_9[:,1]==4)&(pop_9[:,3]==6)&(pick_sick<asp[sci])&(pop_9[:,5]>=10*sci)&(pop_9[:,5]<(10*sci+1)))
+        pop_9[(pop_9[:,1]==4)&(pop_9[:,3]==6)&(pick_sick<asp[sci])&(pop_9[:,5]>=10*sci)&(pop_9[:,5]<(10*sci+1)),1] = 5                 
+        # Wouldnt this step double count previous individuals? Is this step the one that adjusts for pre-existing conditions?
+        thosp += np.sum((pop_9[:,1]==4)&(pop_9[:,3]==6)&(pick_sick<aspc[sci])&(pop_9[:,5]>=10*sci)&(pop_9[:,5]<(10*sci+1))&(pop_9[:,7]==1))
+        pop_9[(pop_9[:,1]==4)&(pop_9[:,3]==6)&(pick_sick<aspc[sci])&(pop_9[:,5]>=10*sci)&(pop_9[:,5]<(10*sci+1))&(pop_9[:,7]==1),1] = 5
     
-    thosp = thosp + np.sum(((pop_9[:,1]==4)+(pop_9[:,3]==6)+(pick_sick<asp[-1])+(pop_9[:,5]>=80))==4)
-    pop_9[((pop_9[:,1]==4)+(pop_9[:,3]==6)+(pick_sick<asp[-1])+(pop_9[:,5]>=80))==5,1]=5
-    thosp = thosp + np.sum(((pop_9[:,1]==4)+(pop_9[:,3]==6)+(pick_sick<aspc[-1])+(pop_9[:,5]>=80)+(pop_9[:,7]==1))==5)
-    pop_9[((pop_9[:,1]==4)+(pop_9[:,5]==6)+(pick_sick<aspc[-1]+(pop_9[:,5]>=80)+(pop_9[:,7]==1))==5,1)]=5
+    # Repeat one more time but for people over the age of 80.
+    thosp += np.sum((pop_9[:,1]==4)&(pop_9[:,3]==6)&(pick_sick<asp[-1])&(pop_9[:,5]>=80))
+    pop_9[(pop_9[:,1]==4)&(pop_9[:,3]==6)&(pick_sick<asp[sci])&(pop_9[:,5]>=80),1] = 5     
+    thosp += np.sum((pop_9[:,1]==4)&(pop_9[:,3]==6)&(pick_sick<aspc[sci])&(pop_9[:,5]>=80)&(pop_9[:,7]==1))  
+    pop_9[(pop_9[:,1]==4)&(pop_9[:,3]==6)&(pick_sick<aspc[sci])&(pop_9[:,5]>=80)&(pop_9[:,7]==1),1] = 5          
           
-    # Move to presymptomatic to symptomatic but not yet severe
-    idxpresym = ((pop_9[:,1]==2)+(pop_9[:,3] >= pop_9[:,2])) == 2
+    # Move presymptomatic to symptomatic but not yet severe.
+    idxpresym = (pop_9[:,1]==2)&(pop_9[:,3]>=pop_9[:,2])
     pop_9[idxpresym,1] = 3*np.ones((pop_9[idxpresym,1].shape))
     pop_9[idxpresym,3] = np.zeros((pop_9[idxpresym,3].shape))
     
     # Move to exposed to presymptomatic
-    pop_9[(pop_9[:,1] == 1)&(pop_9[:,3] >= np.floor(0.5*pop_9[:,2])),1] = 2
+    pop_9[(pop_9[:,1] == 1)&(pop_9[:,3]>=np.floor(0.5*pop_9[:,2])),1] = 2
     ########################################################## 
     
     ##########################################################  
     # UPDATE IN QUARANTINE. See notes from population.
+    
     # Assign to recovered state using mild_rec and sev_rec from above.
     # Set state and days in current state of Individuals with mild symptoms in quarentine and recovered to 
-    # suceptible(0) and recovered (13)
+    # suceptible(0) and recovered (13).
     idxrecovmild = ((pop_9[:,1]==11)+(mild_rec))==2
     pop_9[idxrecovmild,1] = 13*np.ones((pop_9[idxrecovmild,1].shape))
     pop_9[idxrecovmild,3] = np.zeros((pop_9[idxrecovmild,1].shape))    
 
     # Set state and days in current state of Individuals with severe symptoms in quarentine and recovered to 
-    # suceptible(0) and recovered (13)
+    # suceptible(0) and recovered (13).
     idxrecovsevere = ((pop_9[:,1]==12)+(sev_rec))==2
     pop_9[idxrecovsevere,1] = 13*np.ones((pop_9[idxrecovsevere,1].shape))
     pop_9[idxrecovsevere,3] = np.zeros((pop_9[idxrecovsevere,1].shape))    
 
-    # Assign people to cases severe enough to be hospitalised (using pick_sick from above)
+    # Assign people to cases severe enough to be hospitalised (using pick_sick from above).
     # First, everyone who is symptomatic in quarentine (10) progresses to at least mild in quarentine (11).
     pop_9[((pop_9[:,1]==10)+(pop_9[:,3]==6))==2,1] = 11
     
@@ -872,18 +849,18 @@ for i in range(d2s):
     thosp = thosp + np.sum(((pop_9[:,1]==11)+(pop_9[:,3]==6)+(pick_sick<aspc[-1])+(pop_9[:,5]>=80)+(pop_9[:,7]==1))==5)
     pop_9[((pop_9[:,1]==11)+(pop_9[:,5]==6)+(pick_sick<aspc[-1]+(pop_9[:,5]>=80)+(pop_9[:,7]==1))==5,1)]=12    
     
-    # Move to presymptomatic to symptomatic but not yet severe
+    # Move to presymptomatic to symptomatic but not yet severe.
     idxpresym = ((pop_9[:,1]==9)+(pop_9[:,3] >= pop_9[:,2])) == 2
     pop_9[idxpresym,1] = 10*np.ones((pop_9[idxpresym,1].shape))
     pop_9[idxpresym,3] = np.zeros((pop_9[idxpresym,3].shape))
     
-    # Move to exposed to presymptomatic
-    pop_9[((pop_9[:,1] == 8)+(pop_9[:,3] >= np.floor(0.5*pop_9[:,2])))==2,1] = 9    
-    
+    # Move to exposed to presymptomatic.
+    pop_9[((pop_9[:,1] == 8)+(pop_9[:,3] >= np.floor(0.5*pop_9[:,2])))==2,1] = 9        
     ##########################################################
     
     ##########################################################
-    # IDENTIFY CONTAGIOUS AND ACTVE PEOPLE IN DIFFERENT CONTEXTS
+    # IDENTIFY CONTAGIOUS AND ACTVE PEOPLE IN DIFFERENT CONTEXTS.
+    
     # Contagious in the house and at toilets, in population.  
     # At least presymptomatic AND at most severe.
     cpih = np.logical_and(pop_9[:,1] > 1, pop_9[:,1] < 6)  
@@ -907,9 +884,9 @@ for i in range(d2s):
     # Contagious at large in the population (wanderers).
     # cpco OR wanderers.
     cpcow = np.logical_and(cpco==True,pop_9[:,8]==True)
+    ##########################################################  
     
-    
-    ##########################################################    
+    ##########################################################  
     # COMPUTE INFEECTED PEOPLE PER HOUSEHOLD.
     
     infh = accumarray(pop_9[:,0],cpih)   # All infected in house and at toilets, population 
@@ -921,7 +898,8 @@ for i in range(d2s):
     ##########################################################    
     
     ##########################################################
-    # COMPUTE INFECTION PROBABILITIES FOR EACH PERSON BY HOUSEHOLD
+    # COMPUTE INFECTION PROBABILITIES FOR EACH PERSON BY HOUSEHOLD.
+    
     # Probability for members of each household to contract from their housemates
     cfh = 1-(1-twh)**np.array(infh)       # In population.
     cfhq = 1-(1-twh)**np.array(infhq)     # In quarantine.
@@ -975,7 +953,8 @@ for i in range(d2s):
     ##########################################################    
     
     ##########################################################    
-    # ASSIGN NEW INFECTIONS
+    # ASSIGN NEW INFECTIONS.
+    
     new_inf = full_inf_prob>np.random.uniform(0,1,N)                # Find new infections by person, population.
     pop_9[:,1] = pop_9[:,1]+(1-np.sign(pop_9[:,1]))*new_inf         # Impose infections, population.
     new_inf = cfhq[pop_9[:,0].astype(int)]>np.random.uniform(0,1,N) # Find new infections by person, quarantine
@@ -983,7 +962,8 @@ for i in range(d2s):
     ##########################################################    
     
     ##########################################################    
-    # MOVE HOUSEHOLDS TO QUARANTINE
+    # MOVE HOUSEHOLDS TO QUARANTINE.
+    
     # Identify symptomatic people in population
     sip =  np.logical_and(np.logical_and(pop_9[:,1]>2, pop_9[:,1]<6,
                                          pop_9[:,4]==0),pop_9[:,5]>=16)*(np.random.uniform(0,1,N)<siprob)
@@ -997,22 +977,22 @@ for i in range(d2s):
     
     ##########################################################
     # MOVE INDIVIDUALS BACK TO POPULATION when they have not shed for cleardays.
+    
     # Currently, the model does not include a mechanism for sending people back from quarantine
     # if they never get the infection. This may not matter if the infection spreads in quarantine,
     # but we will have to watch to see if some people get stuck in state 7.
-    pop_9[np.logical_and(pop_9[:,1]==13, pop_9[:,3]>=7),1] = 6
-    
+    pop_9[np.logical_and(pop_9[:,1]==13, pop_9[:,3]>=7),1] = 6    
     ##########################################################
     
     ##########################################################
-    # TRACK INFECTION THROUGH SPACE
+    # TRACK INFECTION THROUGH SPACE.
+    
     if np.remainder(i,5) == 0 :
         plt.scatter(hhloc[:,0], hhloc[:,1],s=(1+infh)**2,c=hheth, marker='o')
         plt.pause(0.05)
 
         plt.show()     
     ##########################################################
-
 
 # In[ ]:
 
