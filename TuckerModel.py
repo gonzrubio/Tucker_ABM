@@ -801,9 +801,9 @@ for i in range(d2s):
     
     # Repeat one more time but for people over the age of 80.
     thosp += np.sum((pop_9[:,1]==4)&(pop_9[:,3]==6)&(pick_sick<asp[-1])&(pop_9[:,5]>=80))
-    pop_9[(pop_9[:,1]==4)&(pop_9[:,3]==6)&(pick_sick<asp[sci])&(pop_9[:,5]>=80),1] = 5     
-    thosp += np.sum((pop_9[:,1]==4)&(pop_9[:,3]==6)&(pick_sick<aspc[sci])&(pop_9[:,5]>=80)&(pop_9[:,7]==1))  
-    pop_9[(pop_9[:,1]==4)&(pop_9[:,3]==6)&(pick_sick<aspc[sci])&(pop_9[:,5]>=80)&(pop_9[:,7]==1),1] = 5          
+    pop_9[(pop_9[:,1]==4)&(pop_9[:,3]==6)&(pick_sick<asp[-1])&(pop_9[:,5]>=80),1] = 5     
+    thosp += np.sum((pop_9[:,1]==4)&(pop_9[:,3]==6)&(pick_sick<aspc[-1])&(pop_9[:,5]>=80)&(pop_9[:,7]==1))  
+    pop_9[(pop_9[:,1]==4)&(pop_9[:,3]==6)&(pick_sick<aspc[-1])&(pop_9[:,5]>=80)&(pop_9[:,7]==1),1] = 5          
           
     # Move presymptomatic to symptomatic but not yet severe.
     idxpresym = (pop_9[:,1]==2)&(pop_9[:,3]>=pop_9[:,2])
@@ -817,45 +817,42 @@ for i in range(d2s):
     ##########################################################  
     # UPDATE IN QUARANTINE. See notes from population.
     
-    # Assign to recovered state using mild_rec and sev_rec from above.
-    # Set state and days in current state of Individuals with mild symptoms in quarentine and recovered to 
-    # suceptible(0) and recovered (13).
-    idxrecovmild = ((pop_9[:,1]==11)+(mild_rec))==2
+    # Assign recovered mild cases in quarentine to suceptible(0) and recovered(13) using mild_rec from above.
+    idxrecovmild = (pop_9[:,1]==11)&(mild_rec) 
     pop_9[idxrecovmild,1] = 13*np.ones((pop_9[idxrecovmild,1].shape))
     pop_9[idxrecovmild,3] = np.zeros((pop_9[idxrecovmild,1].shape))    
 
-    # Set state and days in current state of Individuals with severe symptoms in quarentine and recovered to 
-    # suceptible(0) and recovered (13).
-    idxrecovsevere = ((pop_9[:,1]==12)+(sev_rec))==2
+    # Assign recovered severe cases in quarentine to suceptible(0) and recovered(13) using sev_rec from above.
+    idxrecovsevere = (pop_9[:,1]==12)&(sev_rec)
     pop_9[idxrecovsevere,1] = 13*np.ones((pop_9[idxrecovsevere,1].shape))
     pop_9[idxrecovsevere,3] = np.zeros((pop_9[idxrecovsevere,1].shape))    
 
-    # Assign people to cases severe enough to be hospitalised (using pick_sick from above).
-    # First, everyone who is symptomatic in quarentine (10) progresses to at least mild in quarentine (11).
-    pop_9[((pop_9[:,1]==10)+(pop_9[:,3]==6))==2,1] = 11
+    # Assign individuals to cases severe enough to be hospitalised (using pick_sick from above).
+    # First, symptomatic individuals in quarentine (10) progresses to at least mild cases in quarentine (11).
+    pop_9[(pop_9[:,1]==10)&(pop_9[:,3]==6),1] = 11
     
     for sci in range(len(asp)-1):
-        thosp = thosp + np.sum((pop_9[:,1]==11)+(pop_9[:,3]==6)+(pick_sick<asp[sci])+
-                               (pop_9[:,5]>=10*sci)+(pop_9[:,5]<(10*sci+1)) == 5)
-        pop_9[(pop_9[:,1]==11)+(pop_9[:,3]==6)+(pick_sick<asp[sci])+(pop_9[:,5]>=10*sci)+
-            (pop_9[:,5]<(10*sci+1)) == 5,1] = 12
-        thosp = thosp + np.sum((pop_9[:,1]==11)+(pop_9[:,3]==6)+(pick_sick<aspc[sci])+
-                               (pop_9[:,5]>=10*sci)+(pop_9[:,5]<(10*sci+1))+(pop_9[:,7]==1)==6)
-        pop_9[(pop_9[:,1]==11)+(pop_9[:,3]==6)+(pick_sick<asp[sci])+(pop_9[:,5]>=10*sci)+
-            (pop_9[:,5]<(10*sci+1))+(pop_9[:,7]==1)==6,1]=12
+        # Quarentined individuals with mild symptoms for six days, sick, between 10*sci and 10*sci+1 years old to severe and count as hospitalized.
+        thosp += np.sum((pop_9[:,1]==11)&(pop_9[:,3]==6)&(pick_sick<asp[sci])&(pop_9[:,5]>=10*sci)&(pop_9[:,5]<(10*sci+1)))
+        pop_9[(pop_9[:,1]==11)&(pop_9[:,3]==6)&(pick_sick<asp[sci])&(pop_9[:,5]>=10*sci)&(pop_9[:,5]<(10*sci+1)),1] = 12    
 
-    thosp = thosp + np.sum(((pop_9[:,1]==11)+(pop_9[:,3]==6)+(pick_sick<asp[-1])+(pop_9[:,5]>=80))==4)
-    pop_9[((pop_9[:,1]==11)+(pop_9[:,3]==6)+(pick_sick<asp[-1])+(pop_9[:,5]>=80))==5,1]=12
-    thosp = thosp + np.sum(((pop_9[:,1]==11)+(pop_9[:,3]==6)+(pick_sick<aspc[-1])+(pop_9[:,5]>=80)+(pop_9[:,7]==1))==5)
-    pop_9[((pop_9[:,1]==11)+(pop_9[:,5]==6)+(pick_sick<aspc[-1]+(pop_9[:,5]>=80)+(pop_9[:,7]==1))==5,1)]=12    
-    
+        # Adjusts for pre-existing conditions?
+        thosp += np.sum((pop_9[:,1]==11)&(pop_9[:,3]==6)&(pick_sick<aspc[sci])&(pop_9[:,5]>=10*sci)&(pop_9[:,5]<(10*sci+1))&(pop_9[:,7]==1))                
+        pop_9[(pop_9[:,1]==11)&(pop_9[:,3]==6)&(pick_sick<aspc[sci])&(pop_9[:,5]>=10*sci)&(pop_9[:,5]<(10*sci+1))&(pop_9[:,7]==1),1] = 12
+
+    # Repeat one more time but for people over the age of 80.
+    thosp += np.sum((pop_9[:,1]==11)&(pop_9[:,3]==6)&(pick_sick<asp[-1])&(pop_9[:,5]>=80))    
+    pop_9[(pop_9[:,1]==11)&(pop_9[:,3]==6)&(pick_sick<asp[-1])&(pop_9[:,5]>=80),1] = 12         
+    thosp += np.sum((pop_9[:,1]==11)&(pop_9[:,3]==6)&(pick_sick<aspc[-1])&(pop_9[:,5]>=80)&(pop_9[:,7]==1))  
+    pop_9[(pop_9[:,1]==11)&(pop_9[:,3]==6)&(pick_sick<aspc[-1])&(pop_9[:,5]>=80)&(pop_9[:,7]==1),1] = 5   
+
     # Move to presymptomatic to symptomatic but not yet severe.
-    idxpresym = ((pop_9[:,1]==9)+(pop_9[:,3] >= pop_9[:,2])) == 2
+    idxpresym = (pop_9[:,1]==9)&(pop_9[:,3]>=pop_9[:,2])
     pop_9[idxpresym,1] = 10*np.ones((pop_9[idxpresym,1].shape))
     pop_9[idxpresym,3] = np.zeros((pop_9[idxpresym,3].shape))
     
     # Move to exposed to presymptomatic.
-    pop_9[((pop_9[:,1] == 8)+(pop_9[:,3] >= np.floor(0.5*pop_9[:,2])))==2,1] = 9        
+    pop_9[(pop_9[:,1] == 8)&(pop_9[:,3]>=np.floor(0.5*pop_9[:,2])),1] = 9        
     ##########################################################
     
     ##########################################################
