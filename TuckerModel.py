@@ -902,24 +902,22 @@ for i in range(d2s):
     cfhq = 1-(1-twh)**np.array(infhq)     # In quarantine.
     # CHECK THIS MI-DRUN !!!
     
-    # Compute proportions infecteds at toilets and in food lines
+    # Compute proportions infecteds at toilets and in food lines.
     pitoil = (tshared.dot(infh))/(tshared.dot(pph)) 
     pifl = (fshared.dot(infl))/(fshared.dot(allfl)) 
     
-    # Compute transmission at toilets by household (There is an erro when calculating pitoil and pitfl above).
-    tmp = 0
-    for i in np.arange(7) :
-        tmp += (math.factorial(6-i)*math.factorial(i))**-1*(1-pitoil)**(6-i) *(pitoil**i)*(1-aip*tr)**i
-    trans_at_toil = np.sum(1-math.factorial(6)*tmp)      
+    # Note: The transmissions can be implemented as methods with xi (or number of individuals in contact?), pifl and pitoil as arguments.
+    
+    # Compute transmission at toilets by households.
+    xi = np.arange(7)
+    trans_at_toil = 1-factorial(6)*np.sum(((factorial(6-xi)*factorial(xi))**-1)*
+                                (np.transpose(np.array([(1-pitoil)**(6-i) for i in xi])))*
+                                (np.transpose(np.array([pifl**i for i in xi])))*
+                                (np.power(1-aip*tr,xi)),1)
     
     # Compute transmission in food lines by household.
     # Assume each person goes to the food line once per day on 75% of days.
     # Other days someone brings food to them (with no additional contact).
-    
-    # NOTE: Went for Matrices/Linear Algebra approach. Wonwering if loops might be more efficient.
-    # I also match the exact dimensions as MATLAB code but since python doesn't know what a colum
-    # vector is, Im think it might be better to deal with deaful python arrays and transpose at the end.
-    # For now, I wantr to get the same results as the original code.
     
     xi = np.arange(3)
     trans_in_fl = 0.75*(1-factorial(2)*np.sum(((factorial(2-xi)*factorial(xi))**-1)*
@@ -953,17 +951,19 @@ for i in range(d2s):
     # ASSIGN NEW INFECTIONS.
     
     new_inf = full_inf_prob>np.random.uniform(0,1,N)                # Find new infections by person, population.
-    pop_9[:,1] = pop_9[:,1]+(1-np.sign(pop_9[:,1]))*new_inf         # Impose infections, population.
+    pop_9[:,1] += (1-np.sign(pop_9[:,1]))*new_inf                   # Impose infections, population.
     new_inf = cfhq[pop_9[:,0].astype(int)]>np.random.uniform(0,1,N) # Find new infections by person, quarantine
-    pop_9[:,1] = pop_9[:,1]+(pop_9[:,1]==7)*new_inf                 # Impose infections, quarantine.
+    pop_9[:,1] += (pop_9[:,1]==7)*new_inf                           # Impose infections, quarantine.
     ##########################################################    
     
     ##########################################################    
     # MOVE HOUSEHOLDS TO QUARANTINE.
     
     # Identify symptomatic people in population
-    sip =  np.logical_and(np.logical_and(pop_9[:,1]>2, pop_9[:,1]<6,
-                                         pop_9[:,4]==0),pop_9[:,5]>=16)*(np.random.uniform(0,1,N)<siprob)
+    sip = ((pop_9[:,1]>2)&(pop_9[:,1]<6)&(pop_9[:,4]==0)&(pop_9[:,5]>=16))*(np.random.uniform(0,1,N)<siprob)
+    
+#    sip =  np.logical_and(np.logical_and(pop_9[:,1]>2, pop_9[:,1]<6,
+#                                         pop_9[:,4]==0),pop_9[:,5]>=16)*(np.random.uniform(0,1,N)<siprob)
     
     # Identify symptomatic households
     symphouse = np.unique(pop_9[np.where(sip==1),0])    
@@ -978,7 +978,8 @@ for i in range(d2s):
     # Currently, the model does not include a mechanism for sending people back from quarantine
     # if they never get the infection. This may not matter if the infection spreads in quarantine,
     # but we will have to watch to see if some people get stuck in state 7.
-    pop_9[np.logical_and(pop_9[:,1]==13, pop_9[:,3]>=7),1] = 6    
+    pop_9[(pop_9[:,1]==13)&(pop_9[:,3]>=7),1] = 6
+    # pop_9[np.logical_and(pop_9[:,1]==13, pop_9[:,3]>=7),1] = 6    
     ##########################################################
     
     ##########################################################
