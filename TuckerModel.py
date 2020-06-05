@@ -223,8 +223,9 @@ np.min(rN)
 
 k = (2.3/6.4)**(-1.086)
 L = 6.4 / (math.gamma(1 + 1/k))
-pop_5 = np.column_stack( (pop_2, k*np.random.weibull(L,(N,1)), np.zeros((N,1)), np.random.uniform(0,1,N)<pac*(N/(N-300))) )
-pop_5 = np.column_stack((pop_2, np.array([random.weibullvariate(L,k) for sample in np.arange(N)]), np.zeros((N,1)), np.random.uniform(0,1,N)<pac*(N/(N-300))))
+pop_5 = np.column_stack((pop_2,
+                         np.array([random.weibullvariate(L,k) for sample in np.arange(N)]),
+                         np.zeros((N,1)), np.random.uniform(0,1,N)<pac*(N/(N-300))))
 
 assert pop_5.shape==(18700, 5)
 
@@ -613,7 +614,7 @@ ethcor = ethmatch+ss*(1-ethmatch)
 
 
 def make_obs_180420(fblocks,lr1,lr2,N,hhloc,maxhh,lrtol,ethcor):
-    """
+    '''
     fshared: matrix that indictes whether two households use the same food distribution center.
     lis: matrix that holds local interacton stregth between members of different households.
     tl: probability of transmission per local interaction
@@ -621,7 +622,7 @@ def make_obs_180420(fblocks,lr1,lr2,N,hhloc,maxhh,lrtol,ethcor):
     from either person before or person after)
     tg: probability of transmission per global interaction (i.e., 3x daily food lines, from either person before or 
     person after, but only 1/4 of people go to the food line each time to  collect for household).
-    """
+    '''
     # fgroups = np.prod([fblocks]) # Number of feeding groups.
     # fu = N/fgroups # Individuals per feeding group.
     
