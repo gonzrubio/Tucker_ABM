@@ -27,6 +27,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import math 
+import random
 from scipy import optimize
 from scipy.special import factorial
 
@@ -223,6 +224,8 @@ np.min(rN)
 k = (2.3/6.4)**(-1.086)
 L = 6.4 / (math.gamma(1 + 1/k))
 pop_5 = np.column_stack( (pop_2, k*np.random.weibull(L,(N,1)), np.zeros((N,1)), np.random.uniform(0,1,N)<pac*(N/(N-300))) )
+pop_5 = np.column_stack((pop_2, np.array([random.weibullvariate(L,k) for sample in np.arange(N)]), np.zeros((N,1)), np.random.uniform(0,1,N)<pac*(N/(N-300))))
+
 assert pop_5.shape==(18700, 5)
 
 
