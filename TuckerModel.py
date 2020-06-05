@@ -1,28 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# # Tucker Model
-# 
-# #### Pseudo code
-# * create individuals
-# * assign status
-# * for (at=1:num.timesteps) { <br>
-#     infection <br>
-#     calculate number of acts <br>
-#     determine who has an act with whom (ie construct "edgelist") <br>
-#     limit edgelist to discordant pairs <br>
-#     determine infections <br>
-#     do bookkeeping for infections <br>
-#     recovery <br>
-#     identify infecteds <br>
-#     determine recoveries <br>
-#     do bookkeeping for recoveries <br>
-# }
-
-# In[13]:
-
-# Libraries/packages
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -31,17 +6,10 @@ import random
 from scipy import optimize
 from scipy.special import factorial
 
-# In[14]:
+np.random.seed(seed=42) #fix random seed for reproducibility
 
 
-#fix random seed for reproducibility
-np.random.seed(seed=42)
-
-
-# ### Camp Structure
-
-# In[15]:
-
+################################ Camp Structure ################################
 
 Nb = 8100          # Number of people in isoboxes.
 mub = 10           # Isoboxes mean occupancy (people).
@@ -56,29 +24,15 @@ fblocks = np.array([1,1])   # initial sectoring. Divide camp into (nxn) grid, ea
 N = Nb + Nt                 # Total population.
 
 
-# ### Emperical Age and Sex Distribution
-
-# In[16]:
-
+################################ Emperical Age and Sex Distribution ################################
 
 path_to_file = 'age_and_sex.csv'            # Observed data.
 age_and_sex = pd.read_csv(path_to_file)     # Data frame. V1 = age, V2 is sex (1 = male?, 0  = female?).
-
-# Remove "Unamed column" and preview.
-age_and_sex = age_and_sex.loc[:, ~age_and_sex.columns.str.contains('^Unnamed')]
-age_and_sex.head() 
+age_and_sex = age_and_sex.loc[:, ~age_and_sex.columns.str.contains('^Unnamed')] # Remove "Unamed column" and preview.
+age_and_sex = age_and_sex.values            # dataframe to 2D array.
 
 
-# In[17]:
-
-
-print(age_and_sex.describe())     # Summary stats.
-age_and_sex = age_and_sex.values  # dataframe to 2D array.
-
-# ### Transmission parameters
-
-# In[18]:
-
+################################ Transmission parameters ################################
 
 # Infection
 twh = 0.5   # Probability of infecting each person in your household per day.
@@ -86,9 +40,7 @@ aip = 0.1   # Probability of infecting each person you meet per meeting (Fang et
 tr = 1      # Initial transmission reduction (relative to assumed per contact transmission rate, outside household only).
 
 
-# ### Other parameters
-
-# In[19]:
+################################ Other parameters ################################
 
 
 siprob = 0        # Probability of spotting symptoms, per person per day.
@@ -97,21 +49,20 @@ pac = 0.179       # Permanently asymptomatic cases (Mizumoto et al 2020 Eurosurv
 ss = 0.20         # Realtive strength of interaction between different ethnicities.
 
 
-# ### Initial movement parameters
+################################ Initial movement parameters ################################
+
 # Note that the initial assumption is that
 # everyone uses the larger radius some proportion of the time, which is
 # __NOT__ the same as assuming that some people always use the larger radius,
 # Nonetheless, I am setting the proportion equal to the number of males age 10-50 in the population.
-
-# In[20]:
-
 
 lr1 = 0.02       # Smaller movement radius. Range around their household during lockdown or females and individuals age < 10.
 lr2 = 0.1        # Larger movement radius. ie. Pople who violate lockdown enforcement or males over age 10.
 lrtol = 0.02     # Scale interactions - two people with completely overlapping rages with this radius interact once per day
 
 
-# ### Create population matrix (pop)
+################################ Create population matrix (pop) ################################
+
 # Columns:
 # 0. Home number
 # 1. Disease state: 0 = susceptible, 1 = exposed, 2 = presymptomatic, 3 = symptomatic, 4 = mild, 5 = severe, 6 = recovered. Similar states in quarentine are the same plus seven. In other words, this is a categorical variable with values between 0 and 13 inclusive.
@@ -125,7 +76,7 @@ lrtol = 0.02     # Scale interactions - two people with completely overlapping r
 # 
 # pop is $N \times 9$
 
-# #### Columns 0-1 (House number and disease state)
+#  #### Columns 0-1 (House number and disease state)
 # 
 # - Randomly assign each person to a household (rN).
 # - Draw a sample from uniform distribution between 1-810 (hb). Meaning we chose a random isobox.
@@ -137,9 +88,6 @@ lrtol = 0.02     # Scale interactions - two people with completely overlapping r
 # - Start each person as susceptible (col 1 = 0).
 # - Randomly assign one person to be exposed to the virus (pop[someindex,1]=1).
 
-# In[21]:
-
-
 rN = np.concatenate((np.ceil(hb*np.random.uniform(0,1,Nb)), hb+np.ceil(ht*np.random.uniform(0,1,Nt)))) 
 U,ui = np.unique(rN, return_inverse=True)  # ui - indices from the unique sorted array that would reconstruct rN
 assert U[ui].all() == rN.all()
@@ -150,76 +98,10 @@ assert pop_2.shape==(18700, 2)
 pop_2[np.random.randint(0,N),1] = 1
 
 
-# In[22]:
-
-
-np.shape(pop_2)
-
-
-# In[23]:
-
-
-np.shape(ui)
-
-
-# In[24]:
-
-
-np.shape(rN)
-
-
-# In[25]:
-
-
-np.shape(U)
-
-
-# In[26]:
-
-
-ui[:10]
-
-
-# In[27]:
-
-
-np.subtract(rN[:10],1).astype(int)
-
-
-# In[28]:
-
-
-np.unique(pop_2[:][1])
-
-
-# In[29]:
-
-
-np.min(rN)
-
-
-# In[30]:
-
-
-#fig = plt.figure(figsize=(15,8))
-#ax1 = fig.add_subplot(121)
-#ax1.set_ylabel('Number of individuals')
-#ax1.set_xlabel('Isobox number in the camp')
-#ax1.hist(rN[:Nb+1], bins=np.arange(1,hb+1))
-#ax2 = fig.add_subplot(122)
-#ax2.set_ylabel('Number of individuals')
-#ax2.set_xlabel('Tent number in the camp')
-#ax2.hist(rN[Nb+1:], bins=np.arange(1,ht+1))
-#plt.show()
-
-
 # #### Columns 2-4 (symptoms)
 # - Col 2: Days to first symptoms (if they develop symptoms) for each person, following (Backer et al. 2020 Eurosurveillance)
 # - Col 3: Days passed in current state, 0 for now.
 # - Col 4: Whether this person will be asymptomatic.
-
-# In[31]:
-
 
 k = (2.3/6.4)**(-1.086)
 L = 6.4 / (math.gamma(1 + 1/k))
@@ -228,12 +110,6 @@ pop_5 = np.column_stack((pop_2,
                          np.zeros((N,1)), np.random.uniform(0,1,N)<pac*(N/(N-300))))
 
 assert pop_5.shape==(18700, 5)
-
-
-# In[32]:
-
-
-np.shape(np.random.uniform(0,1,N)<pac*(N/(N-300)))
 
 
 # #### Columns 5-6 (Age and sex)
@@ -249,43 +125,13 @@ np.shape(np.random.uniform(0,1,N)<pac*(N/(N-300)))
 # 
 # Billy: I have editted here by drawing samples from rows 
 
-# In[33]:
-
-
 age_and_sex_N=age_and_sex[np.random.randint(age_and_sex.shape[0], size=N)]
 
 
-# In[34]:
-
-
-np.shape(age_and_sex_N)
-
-
-# In[35]:
-
-
-# Is this approach correct?
 pop_7 = np.column_stack((pop_5,
                        age_and_sex_N[:,0],
                        age_and_sex_N[:,1]))
 assert pop_7.shape==(18700, 7)
-
-
-# In[36]:
-
-
-#plt.hist(pop_7[:,5],bins='auto')
-#plt.xlabel('age')
-#plt.show()
-
-
-# In[37]:
-
-
-#plt.hist(pop_7[:,6], bins=[-0.5,0.5,1.5], ec="k")
-#plt.xticks((0,1))
-#plt.xlabel('Sex. Male = 1')
-#plt.show()
 
 
 # #### Column 7-8 (Chronic States and wanderers)
@@ -300,54 +146,19 @@ assert pop_7.shape==(18700, 7)
 # 
 # Gonzalo: Fixed. We get ~300 counts.
 
-# In[38]:
-
 
 myfunction = lambda x: np.absolute(300-np.sum((1+np.exp(-(x-11.69+.2191*pop_7[:,5]-0.001461*pop_7[:,5]**2))**(-1))))-N
 xopt = optimize.fsolve(myfunction, x0=[2])
 print(xopt)
 
+x_s = np.linspace(-5, 5, 201)
+y = [myfunction(x) for x in x_s]
 
-# In[39]:
-
-
-x_s= np.linspace(-5, 5, 201)
-y=[myfunction(x) for x in x_s]
-#plt.plot(x_s, y,xopt,myfunction(xopt),'r+')
-#plt.show()
-
-
-# In[40]:
-
-
-#rchron=myfunction(xopt)
 rchron = (1+np.exp(-(xopt-11.69+.2191*pop_7[:,5]-0.001461*pop_7[:,5]**2)))**(-1)
 chroncases = (np.random.uniform(np.min(rchron),1,N) < rchron) 
 
 pop_8 = np.column_stack( (pop_7, chroncases))
 assert pop_8.shape==(18700, 8)
-
-
-# In[41]:
-
-
-chroncases[np.where(chroncases == 1)]
-#plt.hist(chroncases.astype(int),bins='auto')
-#plt.title('Number of People with chronic conditions')
-#plt.show()
-
-
-# In[42]:
-
-
-print(np.sum(chroncases))
-#plt.hist(chroncases[np.where(chroncases == 1)],bins='auto')
-#plt.title("Number of People with chronic conditions")
-#plt.show()
-
-
-# In[43]:
-
 
 # Ensure that people with chronic conditions are not asymptomatic, and correct number of asymptomatics above.
 # In other words, if chronic conditions = 1 then not asymptomatic.
@@ -356,150 +167,65 @@ pop_9 = np.column_stack( (pop_8, np.logical_and([pop_8[:,6] == 1], [10 <= pop_8[
 assert pop_9.shape==(18700, 9)
 
 
-# ### Create households
+################################ Create households ################################
+
 # - pph is people per household
 # - hhloc are the x and y coordinates of each household
 # - Assign household locations, with isoboxes occupying a square in the center
 
-# In[44]:
-
-
 pph = np.bincount(ui)
 maxhh = pph.size
 
-#plt.hist(pph)
-#plt.xlabel('people per house')
-#plt.show()
-
-print(maxhh)  # This number is different than total number of house holds
-print(ht+hb)
-print(pop_9[-1,0]) # Index of last house, so house number is index +1
-
-
-# In[45]:
-
-
 # Assign x and y coordinates to isoboxes (there are hb total isoboxes). 
 hhloc1 = 0.5*(1-np.sqrt(iba)) + np.sqrt(iba)*np.random.uniform(0,1,(int(hb),2))
-#plt.scatter(hhloc1[:,0], hhloc1[:,1],facecolors='none', edgecolors='b')
-#plt.title('Isoboxes')
-#plt.show()
+
 
 # Repeat for tents.
-#hhloc2 = np.random.uniform(0,1,(int(ht),2))
 hhloc2 = np.random.uniform(0,1,(int(pop_9[N-1,0]-pop_9[Nb-1,0]),2)) # Note: Nb-1 and N-1 to account for zero-indexing.
-#plt.scatter(hhloc2[:,0], hhloc2[:,1],facecolors='none', edgecolors='r')
-#plt.title('Tents')
-#plt.show()
 
 assert (hhloc1.shape[0]+hhloc2.shape[0] == maxhh)
 
-
-# In[46]:
-
-
 # Randomly move tents to the edges of the camp. Assign weights to them.
 hhloc2w = np.ceil(4*np.random.uniform(0,1,(int(pop_9[N-1,0]-pop_9[Nb-1,0]),1)))
-#plt.hist(hhloc2w)
-#plt.show()
 
 assert len(hhloc2w) == hhloc2.shape[0]
-
-
-# In[47]:
 
 
 # This block moves some tents to the right edge.
 
 shift = 0.5*(1-np.sqrt(iba))
-# print(shift)
-# print(1-shift)
-
-# temp = np.copy(hhloc2) # Make deep copy for testing
-# temp[np.where(hhloc2w==1),0] = 1+shift*(hhloc2[np.where(hhloc2w == 1),0]-1)
-# temp[np.where(hhloc2w==1),1] = (1-shift)*hhloc2[np.where(hhloc2w == 1),1]
-#plt.scatter(temp[:,0],temp[:,1],facecolors='none', edgecolors='r')
 
 hhloc2[np.where(hhloc2w==1),0] = 1+shift*(hhloc2[np.where(hhloc2w == 1),0]-1)
 hhloc2[np.where(hhloc2w==1),1] = (1-shift)*hhloc2[np.where(hhloc2w == 1),1]
 
-#plt.scatter(hhloc2[:,0],hhloc2[:,1],facecolors='none', edgecolors='r')
-#plt.title('Tents')
-#plt.show()
-
-
-# In[48]:
-
 
 # This block moves some tents to the upper edge.
 
-# temp[np.where(hhloc2w==2),0] = hhloc2[np.where(hhloc2w == 2),0]*(1-shift)+shift
-# temp[np.where(hhloc2w==2),1] = 1+shift*(hhloc2[np.where(hhloc2w == 2),1]-1)
-# plt.scatter(temp[:,0],temp[:,1],facecolors='none', edgecolors='r')
 
 hhloc2[np.where(hhloc2w==2),0] = hhloc2[np.where(hhloc2w == 2),0]*(1-shift)+shift
 hhloc2[np.where(hhloc2w==2),1] = 1+shift*(hhloc2[np.where(hhloc2w == 2),1]-1)
 
-#plt.scatter(hhloc2[:,0],hhloc2[:,1],facecolors='none', edgecolors='r')
-#plt.title('Tents')
-#plt.show()
-
-
-# In[49]:
-
 
 # This block moves some tents to the left edge.
 
-# temp[np.where(hhloc2w==3),0] = shift*hhloc2[np.where(hhloc2w == 3),0]
-# temp[np.where(hhloc2w==3),1] = hhloc2[np.where(hhloc2w == 3),1]*(1-shift)+shift
-#plt.scatter(temp[:,0],temp[:,1],facecolors='none', edgecolors='r')
-
 hhloc2[np.where(hhloc2w==3),0] = shift*hhloc2[np.where(hhloc2w == 3),0]
 hhloc2[np.where(hhloc2w==3),1] = hhloc2[np.where(hhloc2w == 3),1]*(1-shift)+shift
-#
-#plt.scatter(hhloc2[:,0],hhloc2[:,1],facecolors='none', edgecolors='r')
-#plt.title('Tents')
-#plt.show()
-
-
-# In[50]:
 
 
 # This block moves some tents to the bottom edge.
 
-# temp[np.where(hhloc2w==4),0] = (1-shift)*hhloc2[np.where(hhloc2w == 4),0]
-# temp[np.where(hhloc2w==4),1] = shift*hhloc2[np.where(hhloc2w == 4),1]
-# plt.scatter(temp[:,0],temp[:,1],facecolors='none', edgecolors='r')
-
 hhloc2[np.where(hhloc2w==4),0] = (1-shift)*hhloc2[np.where(hhloc2w == 4),0]
 hhloc2[np.where(hhloc2w==4),1] = shift*hhloc2[np.where(hhloc2w == 4),1]
 
-#plt.scatter(hhloc2[:,0],hhloc2[:,1],facecolors='none', edgecolors='r')
-#plt.title('Tents')
-#plt.show()
-
-
-# In[51]:
-
-
-#fig = plt.figure()
-#ax1 = fig.add_subplot(111)
-#
-#ax1.scatter(hhloc2[:,0],hhloc2[:,1],facecolors='none', edgecolors='r', label='Tents')
-#ax1.scatter(hhloc1[:,0],hhloc1[:,1],facecolors='none', edgecolors='b', label='Isoboxes')
-#plt.legend(loc='upper left');
-#plt.show()
 
 hhloc = np.vstack((hhloc1,hhloc2)) 
 assert hhloc.shape[0] == maxhh
 
 
-# ### POSITION TOILETS
+################################ POSITION TOILETS ################################
+
 # - Toilets position make an evely spaced $nx \times ny$ grid throughout the camp.
 # - Create where 1 indicates that households share the same toilet.
-
-# In[52]:
-
 
 def assignBlock(hhlocc,maxhh,blocks):
     """
@@ -515,9 +241,6 @@ def assignBlock(hhlocc,maxhh,blocks):
     return [num,shared]
 
 
-# In[53]:
-
-
 nx = 12
 ny = 12
 tblocks = np.array([nx,ny])       # Grid dimensions.
@@ -529,30 +252,15 @@ tu = N/tgroups                    # ~ people / toilet
 assert np.max(tnum) == np.prod(tblocks)
 assert tshared.shape == (maxhh,maxhh)
 
-#plt.hist(tnum)
-#plt.ylabel('Households')
-#plt.xlabel('Toilet number')
-#plt.show()
 
-#fig=plt.figure(figsize=(9, 8), dpi= 80, facecolor='w', edgecolor='k')
-#plt.imshow(tshared)
-#plt.title('Shared toilets')
-#plt.xlabel('Household number')
-#plt.ylabel('Household number')
-#plt.colorbar()
-#plt.show()
+################################ Create ethnic groups ################################
 
-
-# ### Create ethnic groups
 # - Households are assigned to ethnicities.
 # - Ethnic groups are spatially clustered and randomly positioned
 # - The distribution matches the distribution of people in the Moria data.
 # - Only ethnicities with > 50 people in the observed data included.
 # 
 # How do we account for ethnicities with < 50 peolpe?
-
-# In[54]:
-
 
 # Number of people in each group.
 Afghan = 7919 ; Cameroon = 149 ; Congo = 706 ;Iran = 107 ;Iraq = 83 ; Somalia = 442 ; Syria = 729
@@ -564,9 +272,6 @@ totEthnic == np.sum(g)
 
 g = np.round(maxhh*g/totEthnic)              # Number of households per group.
 g = np.random.choice(g,len(g),replace=False) # Randomize group order.
-
-
-# In[55]:
 
 
 # Randomly chose a household (location), and assign an ethnicity to the n nearest households.
@@ -581,37 +286,14 @@ for i in range(len(g)):
     hheth[hhunass[cloind[0:int(g[i])],0].astype(int)] = i  # Assign i-th ethnic group to those households.
     hhunass = np.delete(hhunass,cloind[0:int(g[i])],0)     # Remove those hoseholds (remove the i-th cluster/ethnic group)
     
-#plt.hist(hheth)
-#plt.ylabel('Households per cluster ')
-#plt.xlabel('Ethnic group number (cluster)')
-#plt.show()
-
-
-# In[56]:
-
 
 # Scale local interactions strength for ethnicities
-
-# plt.imshow(np.tile(hheth,(1,len(hheth))))
-# plt.colorbar()
-# plt.show()
-
-# plt.imshow( np.tile(hheth,(1,len(hheth))).T )
-# plt.colorbar()
-# plt.show()
 
 ethmatch = ( np.tile(hheth,(1,len(hheth))) ==  np.tile(hheth,(1,len(hheth))).T )
 ethcor = ethmatch+ss*(1-ethmatch)
 
-#plt.imshow( ethcor )
-#plt.colorbar()
-#plt.show()
 
-
-# ### Create interaction rates
-
-# In[57]:
-
+################################ Create interaction rates ################################
 
 def make_obs_180420(fblocks,lr1,lr2,N,hhloc,maxhh,lrtol,ethcor):
     '''
@@ -664,47 +346,13 @@ def make_obs_180420(fblocks,lr1,lr2,N,hhloc,maxhh,lrtol,ethcor):
     return fshared, lis
 
 
-# In[58]:
-
-
 fshared, lis = make_obs_180420(fblocks,lr1,lr2,N,hhloc,maxhh,lrtol,ethcor)
-#plt.imshow(fshared)
-#plt.title('Shared food lines')
-#plt.xlabel('Household number')
-#plt.ylabel('Household number')
-#plt.colorbar()
-#plt.show()
 
 
-# In[59]:
-
-
-#fig, ax = plt.subplots(1,3, sharex=True, figsize=(50,100))
-#ax[0].imshow(lis[:,:,0])
-#ax[1].imshow(lis[:,:,1])
-#ax[2].imshow(lis[:,:,2])
-#plt.show()
-
-
-# ### Simulate infection dynamics
-# Pseudo code (try to modulize everymajor step)
-# 
-# while not finished{
-#     - Record disease state progression.
-#     - Stop simmulation if the outbreak is finished.
-#     - Introduce interventions
-#     - Update in population
-#     - Update in quarantine
-#     
-# }
-# 
+################################ Simulate infection dynamics ################################
 
 # #### Control and Tracking variables
 # - track_states is a $d2s \times nCat$ matrix containing the distribution of the desease states for a given day.
-# 
-
-# In[66]:
-
 
 def isFinished(states,iteration):
     '''Counts the number of individuals who are not suceptible or recovered.'''
@@ -715,8 +363,6 @@ def accumarray(subs,val):
     https://www.mathworks.com/help/matlab/ref/accumarray.html'''
     return np.array([np.sum(val[np.where(subs==i)]) for i in np.unique(subs)])
 
-# In[67]:
-
 
 d2s = 200 # Number of time steps (days). #200.
 nCat = 14 # Diseas state categories (0-13).
@@ -724,18 +370,9 @@ track_states = np.zeros((d2s,nCat))
 op = 1 # ?
 thosp = 0 # Total number of hospitalized individuals.
 
-
-# In[68]:
-
-## Check if we need to adjust for zero indexing.
-## Days to symptoms column doesnt have same distribution as in MATLAB code.
-## Fix addition of booleans, maybe change to logical &.
 for i in range(d2s):   
-#<<<<<<< HEAD
-    #print("Day:",i)
-#=======
+
     print(f"Day:{i+1}")
-#>>>>>>> 18d130638b22acf46cbe8ec59bd11a6233b8c9cd
 
     # Record states (disease progession)
     track_states[i,:] = np.histogram(pop_9[:,1], bins=np.arange(nCat+1))[0] 
