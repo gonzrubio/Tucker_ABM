@@ -149,7 +149,6 @@ assert pop_7.shape==(18700, 7)
 
 myfunction = lambda x: np.absolute(300-np.sum((1+np.exp(-(x-11.69+.2191*pop_7[:,5]-0.001461*pop_7[:,5]**2))**(-1))))-N
 xopt = optimize.fsolve(myfunction, x0=[2])
-print(xopt)
 
 x_s = np.linspace(-5, 5, 201)
 y = [myfunction(x) for x in x_s]
@@ -386,7 +385,7 @@ for i in range(d2s):
     # Introduce new interventions on a cue (queue?).
 
     if ((op == 1) and (i > 0) and (((sum(cpih)-sum(cpco))/N) > -1)): 
-        print("Introduced new interventions on a cue/queue on iteration #",i)
+        print("Introduced new interventions on a cue/queue on day #",i+1)
         iat1 = i
         op = 0
         lr1 = 0.001
@@ -428,7 +427,7 @@ for i in range(d2s):
     pop_9[(sev_rec)&(pop_9[:,1]==5),1] = 6                              # Severe symptoms and recovered.    
     
     pick_sick = np.random.uniform(0,1,N)                # Get random numbers to determine health states.
-    pop_9[(pop_9[:,3]==6)&(pop_9[:,3]==6),1] = 4        # Move individuals with 6 days of symptoms to mild.
+    pop_9[(pop_9[:,1]==3)&(pop_9[:,3]==6),1] = 4        # Move individuals with 6 days of symptoms to mild.
 
     asp = np.array([0,.000408,.0104,.0343,.0425,.0816,.118,.166,.184])        # Verity et al. hospitalisation.
     aspc = np.array([.0101,.0209,.0410,.0642,.0721,.2173,.2483,.6921,.6987])  # Verity et al. corrected for Tuite.    
@@ -508,8 +507,8 @@ for i in range(d2s):
     cpihq = np.logical_and(pop_9[:,1]>8, pop_9[:,1]<13)    
     
     # Contagious at large in the population (all - for food lines)    
-    # Presymptomatic OR (at least symptomatic AND at most mild AND asymptomatic) OR less than 16 years old.
-    cpco = np.logical_or(pop_9[:,1]==2, np.logical_and(pop_9[:,1]>2, pop_9[:,1]<5, pop_9[:,4]==1), pop_9[:,5]<16)    
+    # Presymptomatic OR (at least symptomatic AND at most mild AND asymptomatic) OR less than 16 years old.    
+    cpco = (pop_9[:,1]==2) | ( (pop_9[:,1]>2)&(pop_9[:,1]<5)&( (pop_9[:,4]==1)|(pop_9[:,5]<16) ) )
     
     # All at large in the population (all - for food lines). 
     # cpco OR (susceptible or exposed) OR recovered.
@@ -602,10 +601,7 @@ for i in range(d2s):
     
     # Identify symptomatic people in population
     sip = ((pop_9[:,1]>2)&(pop_9[:,1]<6)&(pop_9[:,4]==0)&(pop_9[:,5]>=16))*(np.random.uniform(0,1,N)<siprob)
-    
-#    sip =  np.logical_and(np.logical_and(pop_9[:,1]>2, pop_9[:,1]<6,
-#                                         pop_9[:,4]==0),pop_9[:,5]>=16)*(np.random.uniform(0,1,N)<siprob)
-    
+
     # Identify symptomatic households
     symphouse = np.unique(pop_9[np.where(sip==1),0])    
     
@@ -620,17 +616,17 @@ for i in range(d2s):
     # if they never get the infection. This may not matter if the infection spreads in quarantine,
     # but we will have to watch to see if some people get stuck in state 7.
     pop_9[(pop_9[:,1]==13)&(pop_9[:,3]>=7),1] = 6
-    # pop_9[np.logical_and(pop_9[:,1]==13, pop_9[:,3]>=7),1] = 6    
+
     ##########################################################
     
     ##########################################################
     # TRACK INFECTION THROUGH SPACE.
     
-    if np.remainder(i,5) == 0 :
-        plt.scatter(hhloc[:,0], hhloc[:,1],s=(1+infh)**2,c=hheth, marker='o')
-        plt.pause(0.05)
-
-        plt.show()     
+#    if np.remainder(i,5) == 0 :
+#        plt.scatter(hhloc[:,0], hhloc[:,1],s=(1+infh)**2,c=hheth, marker='o')
+#        plt.pause(0.05)
+#
+#        plt.show()     
     ##########################################################
 
 # In[ ]:
