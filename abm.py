@@ -82,3 +82,70 @@ def form_population_matrix(N,hb,Nb,ht,Nt,pac,age_and_gender):
     assert pop_matrix.shape==(N, 9)
     return pop_matrix
 
+def place_households(ppl_to_hh_index,prop_type1,num_hh_type1):
+    pph = np.bincount(ppl_to_hh_index)
+    maxhh = pph.size #number of total households
+    # Assign x and y coordinates to isoboxes (there are hb total isoboxes). 
+    hhloc1 = 0.5*(1-np.sqrt(prop_type1)) + np.sqrt(prop_type1)*np.random.uniform(0,1,(int(num_hh_type1),2))
+    # Repeat for tents.
+    hhloc2 = np.random.uniform(0,1,(int(maxhh-num_hh_type1),2)) # Note: Nb-1 and N-1 to account for zero-indexing.
+    assert (hhloc1.shape[0]+hhloc2.shape[0] == maxhh)
+    # Randomly move tents to the edges of the camp. Assign randomly a side to each of the household.
+    hhloc2w=np.random.randint(1, 5, size=int(maxhh-num_hh_type1))
+    assert len(hhloc2w) == hhloc2.shape[0]
+    # This block moves some tents to the right edge.
+    shift = 0.5*(1-np.sqrt(prop_type1)) #this is the width of the gap assuming isobox occupies a square in the middle with half the area 
+    #(interesting parameter to tune)
+    hhloc2[np.where(hhloc2w==1),0] = shift*hhloc2[np.where(hhloc2w == 1),0]+(1-shift)
+    hhloc2[np.where(hhloc2w==1),1] = (1-shift)*hhloc2[np.where(hhloc2w == 1),1] #shrink towards bottom right
+    # This block moves some tents to the upper edge.
+    hhloc2[np.where(hhloc2w==2),0] = hhloc2[np.where(hhloc2w == 2),0]*(1-shift)+shift #push towards top right
+    hhloc2[np.where(hhloc2w==2),1] = shift*hhloc2[np.where(hhloc2w == 2),1]+(1-shift)
+    # This block moves some tents to the left edge.
+    hhloc2[np.where(hhloc2w==3),0] = shift*hhloc2[np.where(hhloc2w == 3),0]
+    hhloc2[np.where(hhloc2w==3),1] = hhloc2[np.where(hhloc2w == 3),1]*(1-shift)+shift #push it towards top left
+    # This block moves some tents to the bottom edge.
+    hhloc2[np.where(hhloc2w==4),0] = (1-shift)*hhloc2[np.where(hhloc2w == 4),0] #push it towards bottom left
+    hhloc2[np.where(hhloc2w==4),1] = shift*hhloc2[np.where(hhloc2w == 4),1] 
+    hhloc = np.vstack((hhloc1,hhloc2)) 
+    assert hhloc.shape[0] == maxhh
+    return hhloc
+
+def position_toilet(hhloc,nx = 12,ny = 12):
+    tblocks = np.array([nx,ny])       # Grid dimensions.
+    # tgroups = tblocks[0]*tblocks[1]   # Number of blocks in the grid.
+    # tu = num_ppl/tgroups                    # ~ people / toilet
+    hh_size=hhloc.shape[0]
+    tlimit_x = np.arange(1,tblocks[0]+1)/tblocks[0]
+    tlabel_x = np.digitize(hhloc[:,0], tlimit_x)
+    tlimit_y = np.arange(1,tblocks[1]+1)/tblocks[1]
+    tlabel_y = np.digitize(hhloc[:,1], tlimit_y)
+    tlabel = tlabel_y*tblocks[0]+tlabel_x+1
+    #find out which households share the same toilet
+    TEMP = np.tile(tlabel,(len(tlabel),1))
+    tshared = (TEMP.T == TEMP) - np.eye(hh_size)
+    assert np.max(tlabel) == np.prod(tblocks)
+    assert tshared.shape == (hh_size,hh_size)
+    return [tlabel,tshared]
+
+def create_ethnic_groups(hhloc,int_eth):
+    Afghan = 7919 ; Cameroon = 149 ; Congo = 706 ;Iran = 107 ;Iraq = 83 ; Somalia = 442 ; Syria = 729
+    g = np.array([Afghan,Cameroon,Congo,Iran,Iraq,Somalia,Syria])  
+    totEthnic = sum(g) 
+    hh_size=hhloc.shape[0]
+    g_hh = np.round(hh_size*g/totEthnic)              # Number of households per group.
+    np.random.shuffle(g_hh) #shuffle the array
+    hhunass= np.column_stack((np.arange(0,hh_size), hhloc))   # Unassigned households. Firsto column is the index of the hh.
+    hheth = np.zeros((hh_size,1))
+    i=0
+    for g in g_hh:
+        gcen = hhunass[np.random.randint(hhunass.shape[0]),1:] # Chose an unassigned household as the group (cluster) centre.
+        dfromc = np.sum((hhunass[:,1:]-np.tile(gcen,(hhunass.shape[0],1)))**2,1) # Squared distance to cluster centre.
+        cloind = np.argsort(dfromc)                            # Get the indices of the closest households (cloind).
+        hheth[hhunass[cloind[0:int(g)],0].astype(int)] = i  # Assign i-th ethnic group to those households.
+        hhunass = np.delete(hhunass,cloind[0:int(g)],0)     # Remove those hoseholds (remove the i-th cluster/ethnic group)
+        i+=1
+    ethmatch = (np.tile(hheth,(1,len(hheth)))==np.tile(hheth,(1,len(hheth))).T )
+    #scale down the connection for poeple of different background
+    ethcor = ethmatch+int_eth*(1-ethmatch)
+    return ethcor
