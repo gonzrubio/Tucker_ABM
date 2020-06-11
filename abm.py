@@ -163,3 +163,49 @@ def create_ethnic_groups(hhloc,int_eth):
     #scale down the connection for poeple of different background
     ethcor = ethmatch+int_eth*(1-ethmatch)
     return ethcor
+
+def interaction_neighbours(hhloc,lr1,lr2,lrtol,ethcor):
+    #create distance matrix for distance in between households
+    hhdm_x=(np.tile(hhloc[:,0],(hhloc.shape[0],1)).T - np.tile(hhloc[:,0],(hhloc.shape[0],1)))**2
+    hhdm_y=(np.tile(hhloc[:,1],(hhloc.shape[0],1)).T - np.tile(hhloc[:,1],(hhloc.shape[0],1)))**2
+    hhdm=np.sqrt(hhdm_x+hhdm_y)
+    #the case where lr1 is inteacting with lr1
+    angle11=2*np.arccos(np.clip(hhdm/(2*lr1),a_min=None,a_max=1)) 
+    area_sector11=0.5*(lr1**2)*angle11
+    area_overlap11=area_sector11*2-lr1*np.sin(angle11/2)*hhdm
+    relative_encounter11=area_overlap11/(math.pi**2*lr1**4)
+    #the case where lr2 is inteacting with lr2
+    angle22=2*np.arccos(np.clip(hhdm/(2*lr2),a_min=None,a_max=1)) 
+    area_sector22=0.5*(lr2**2)*angle22
+    area_overlap22=area_sector22*2-lr2*np.sin(angle22/2)*hhdm
+    relative_encounter22=area_overlap22/(math.pi**2*lr2**4)
+    #the case where lr1 is interacting with lr2
+    angle1=2*np.arccos(np.clip((hhdm**2+lr2**2-lr1**2)/(2*hhdm*lr2),a_min=None,a_max=1)) #nan means no overlap in this case
+    angle2=2*np.arccos(np.clip((hhdm**2+lr1**2-lr2**2)/(2*hhdm*lr1),a_min=None,a_max=1)) #nan means no overlap in this case
+    area_sector1=0.5*(lr1**2)*angle2
+    area_sector2=0.5*(lr2**2)*angle1
+    area_overlap12=np.nan_to_num(area_sector1+area_sector2-lr1*np.sin(angle2/2)*hhdm)
+    relative_encounter12=area_overlap12/(math.pi**2*lr2**2*lr1**2)
+    lis = np.multiply(math.pi*lrtol**2*np.dstack((relative_encounter11,relative_encounter12,relative_encounter22)),np.dstack((ethcor,ethcor,ethcor)))
+    return lis
+
+def interaction_neighbours_fast(hhloc,lr1,lr2,lrtol,ethcor):
+    #use the formula from https://mathworld.wolfram.com/Circle-CircleIntersection.html 
+    #create distance matrix for distance in between households
+    hhdm_x=(np.tile(hhloc[:,0],(hhloc.shape[0],1)).T - np.tile(hhloc[:,0],(hhloc.shape[0],1)))**2
+    hhdm_y=(np.tile(hhloc[:,1],(hhloc.shape[0],1)).T - np.tile(hhloc[:,1],(hhloc.shape[0],1)))**2
+    hhdm=np.sqrt(hhdm_x+hhdm_y)
+    #the case where lr1 is inteacting with lr1
+    area_overlap11=2*(lr1**2*np.arccos(np.clip(0.5*hhdm/lr1,a_min=None,a_max=1))-np.nan_to_num(hhdm/2*np.sqrt(lr1**2-hhdm**2/4)))
+    relative_encounter11=area_overlap11/(math.pi**2*lr1**4)
+    #the case where lr2 is inteacting with lr2
+    area_overlap22=2*(lr2**2*np.arccos(np.clip(hhdm/(2*lr2),a_min=None,a_max=1))-np.nan_to_num(hhdm/2*np.sqrt(lr2**2-hhdm**2/4)))
+    relative_encounter22=area_overlap22/(math.pi**2*lr2**4)
+    #the case where lr1 is interacting with lr2
+    area_overlap12=np.nan_to_num((lr1**2*np.arccos(np.clip((hhdm**2+lr1**2-lr2**2)/(2*hhdm*lr1),a_min=None,a_max=1)))
+    +(lr2**2*np.arccos(np.clip((hhdm**2+lr2**2-lr1**2)/(2*hhdm*lr2),a_min=None,a_max=1)))
+    -0.5*np.sqrt((-hhdm+lr1+lr2)*(hhdm+lr1-lr2)*(hhdm-lr1+lr2)*(hhdm+lr1+lr2)))
+    relative_encounter12=area_overlap12/(math.pi**2*lr2**2*lr1**2)
+    lis = np.multiply(math.pi*lrtol**2*np.dstack((relative_encounter11,relative_encounter12,relative_encounter22)),np.dstack((ethcor,ethcor,ethcor)))
+    return lis
+
