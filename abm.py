@@ -111,22 +111,36 @@ def place_households(ppl_to_hh_index,prop_type1,num_hh_type1):
     assert hhloc.shape[0] == maxhh
     return hhloc
 
+def assign_block(hhloc,blocks):
+    """
+    Out
+    num: Assign a block to a household (ie. toilet block or food line)
+    shared: A Matrix of shared blocks at the household level.
+    """
+    hh_size=hhloc.shape[0]
+    limit_x = np.arange(1,blocks[0]+1)/blocks[0]
+    label_x = np.digitize(hhloc[:,0], limit_x)
+    limit_y = np.arange(1,blocks[1]+1)/blocks[1]
+    label_y = np.digitize(hhloc[:,1], limit_y)
+    label = label_y*blocks[0]+label_x+1
+    #find out which households share the same toilet
+    TEMP = np.tile(label,(len(label),1))
+    shared = (TEMP.T == TEMP) - np.eye(hh_size)
+    assert np.max(label) == np.prod(blocks)
+    assert shared.shape == (hh_size,hh_size)
+    return label,shared
+
 def position_toilet(hhloc,nx = 12,ny = 12):
     tblocks = np.array([nx,ny])       # Grid dimensions.
     # tgroups = tblocks[0]*tblocks[1]   # Number of blocks in the grid.
     # tu = num_ppl/tgroups                    # ~ people / toilet
-    hh_size=hhloc.shape[0]
-    tlimit_x = np.arange(1,tblocks[0]+1)/tblocks[0]
-    tlabel_x = np.digitize(hhloc[:,0], tlimit_x)
-    tlimit_y = np.arange(1,tblocks[1]+1)/tblocks[1]
-    tlabel_y = np.digitize(hhloc[:,1], tlimit_y)
-    tlabel = tlabel_y*tblocks[0]+tlabel_x+1
-    #find out which households share the same toilet
-    TEMP = np.tile(tlabel,(len(tlabel),1))
-    tshared = (TEMP.T == TEMP) - np.eye(hh_size)
-    assert np.max(tlabel) == np.prod(tblocks)
-    assert tshared.shape == (hh_size,hh_size)
+    tlabel,tshared=assign_block(hhloc,tblocks)
     return [tlabel,tshared]
+
+def position_foodline(hhloc,nx=1,ny=1):
+    fblocks = np.array([nx,ny]) 
+    flabel,fshared=assign_block(hhloc,fblocks)
+    return flabel,fshared
 
 def create_ethnic_groups(hhloc,int_eth):
     Afghan = 7919 ; Cameroon = 149 ; Congo = 706 ;Iran = 107 ;Iraq = 83 ; Somalia = 442 ; Syria = 729
