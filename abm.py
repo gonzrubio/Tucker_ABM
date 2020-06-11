@@ -122,8 +122,30 @@ def position_toilet(hhloc,nx = 12,ny = 12):
     tlabel_y = np.digitize(hhloc[:,1], tlimit_y)
     tlabel = tlabel_y*tblocks[0]+tlabel_x+1
     #find out which households share the same toilet
-    TEMP = np.outer(tlabel,np.ones((1,len(tlabel))))
+    TEMP = np.tile(tlabel,(len(tlabel),1))
     tshared = (TEMP.T == TEMP) - np.eye(hh_size)
     assert np.max(tlabel) == np.prod(tblocks)
     assert tshared.shape == (hh_size,hh_size)
     return [tlabel,tshared]
+
+def create_ethnic_groups(hhloc,int_eth):
+    Afghan = 7919 ; Cameroon = 149 ; Congo = 706 ;Iran = 107 ;Iraq = 83 ; Somalia = 442 ; Syria = 729
+    g = np.array([Afghan,Cameroon,Congo,Iran,Iraq,Somalia,Syria])  
+    totEthnic = sum(g) 
+    hh_size=hhloc.shape[0]
+    g_hh = np.round(hh_size*g/totEthnic)              # Number of households per group.
+    np.random.shuffle(g_hh) #shuffle the array
+    hhunass= np.column_stack((np.arange(0,hh_size), hhloc))   # Unassigned households. Firsto column is the index of the hh.
+    hheth = np.zeros((hh_size,1))
+    i=0
+    for g in g_hh:
+        gcen = hhunass[np.random.randint(hhunass.shape[0]),1:] # Chose an unassigned household as the group (cluster) centre.
+        dfromc = np.sum((hhunass[:,1:]-np.tile(gcen,(hhunass.shape[0],1)))**2,1) # Squared distance to cluster centre.
+        cloind = np.argsort(dfromc)                            # Get the indices of the closest households (cloind).
+        hheth[hhunass[cloind[0:int(g)],0].astype(int)] = i  # Assign i-th ethnic group to those households.
+        hhunass = np.delete(hhunass,cloind[0:int(g)],0)     # Remove those hoseholds (remove the i-th cluster/ethnic group)
+        i+=1
+    ethmatch = (np.tile(hheth,(1,len(hheth)))==np.tile(hheth,(1,len(hheth))).T )
+    #scale down the connection for poeple of different background
+    ethcor = ethmatch+int_eth*(1-ethmatch)
+    return ethcor

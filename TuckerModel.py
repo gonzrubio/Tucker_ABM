@@ -266,7 +266,7 @@ assert tshared.shape == (maxhh,maxhh)
 Afghan = 7919 ; Cameroon = 149 ; Congo = 706 ;Iran = 107 ;Iraq = 83 ; Somalia = 442 ; Syria = 729
 g = np.array([Afghan,Cameroon,Congo,Iran,Iraq,Somalia,Syria])  
 
-# Im not sure what this number represents exactly. I believe its related to population but it does not equal sum(g).
+# the totEthinic refers to all the people that are registered in the Moria data and sum(g) are the major ethinic group population combined
 totEthnic = 15327  
 totEthnic == np.sum(g)
 
