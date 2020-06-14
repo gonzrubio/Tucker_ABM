@@ -136,7 +136,7 @@ def position_toilet(hhloc,nx = 12,ny = 12):
     # tgroups = tblocks[0]*tblocks[1]   # Number of blocks in the grid.
     # tu = num_ppl/tgroups                    # ~ people / toilet
     tlabel,tshared=assign_block(hhloc,tblocks)
-    return [tlabel,tshared]
+    return tlabel,tshared
 
 def position_foodline(hhloc,nx=1,ny=1):
     fblocks = np.array([nx,ny]) 
