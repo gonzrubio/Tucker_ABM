@@ -1,8 +1,17 @@
 import numpy as np
+import pandas as pd
 import random
 import math
 from scipy import optimize
 from scipy.special import factorial
+
+def read_age_gender(num_ppl):
+    path_to_file = 'age_and_sex.csv'            # Observed data.
+    age_and_gender = pd.read_csv(path_to_file)     # Data frame. V1 = age, V2 is sex (1 = male?, 0  = female?).
+    age_and_gender = age_and_gender.loc[:, ~age_and_gender.columns.str.contains('^Unnamed')] 
+    age_and_gender = age_and_gender.values 
+    age_and_gender = age_and_gender[np.random.randint(age_and_gender.shape[0], size=num_ppl)]
+    return age_and_gender
 
 def create_household_column(num_hh_type1,num_ppl_type1,num_hh_type2,num_ppl_type2):
     ppl_hh_index_draw= np.concatenate((np.ceil(num_hh_type1*np.random.uniform(0,1,num_ppl_type1)), 
