@@ -370,7 +370,7 @@ legend('exp','presym','sym','mild','sev')
 % 
 figure(4)
 plot(track_states(1:i,8:14))
-legend('q_susc','q_exp','q_presym','q_sym','q_mild','q_sev','q_rec')
+legend('susc','exp','asy','sym','mrec','sev','rec')
 
 figure(5)
 plot(sum(track_states(1:i,8:14),2))
@@ -379,9 +379,6 @@ legend('total quarantine')
 figure(6)
 plot(sum(track_states(1:i,1:7),2))
 legend('total camp')
-
-% SAVE track_states
-% writematrix(track_states,'track_states_MATLAB.csv') 
 
 %COLLECT USEFUL DATA
 [peak_infection,days_to_peak_infection]=max(sum(track_states(:,[2:6,9:13]),2));
