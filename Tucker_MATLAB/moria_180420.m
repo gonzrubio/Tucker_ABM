@@ -359,36 +359,45 @@ while finished==0
     
 end
 
-% %TRACK INFECTION THROUGH TIME
-figure(2)
-plot(track_states(1:i,1:7))
-legend('susc','exp','presym','sym','mild','sev','rec')
-% 
-figure(3)
-plot(track_states(1:i,2:6))
-legend('exp','presym','sym','mild','sev')
-% 
-figure(4)
-plot(track_states(1:i,8:14))
-legend('q_susc','q_exp','q_presym','q_sym','q_mild','q_sev','q_rec')
-
-figure(5)
-plot(sum(track_states(1:i,8:14),2))
-legend('total quarantine')
-
-figure(6)
-plot(sum(track_states(1:i,1:7),2))
-legend('total camp')
-
-% SAVE track_states
-% writematrix(track_states,'track_states_MATLAB.csv') 
-
 %COLLECT USEFUL DATA
-[peak_infection,days_to_peak_infection]=max(sum(track_states(:,[2:6,9:13]),2));
-[peak_hospitalisation,days_to_peak_hospitalisation]=max(sum(track_states(:,[6,13]),2));
-[peak_quarantine,days_to_peak_quarantine]=max(sum(track_states(:,8:14),2));
-total_proportion_infected=track_states(i,7)/N;
-epidemic_over=(sum(track_states(i,[1,7]))==N);
+% writematrix(track_states,'track_states_baseline.csv') 
+[s.peak_infection,s.days_to_peak_infection]=max(sum(track_states(:,[2:6,9:13]),2));
+[s.peak_hospitalisation,s.days_to_peak_hospitalisation]=max(sum(track_states(:,[6,13]),2));
+[s.peak_quarantine,s.days_to_peak_quarantine]=max(sum(track_states(:,8:14),2));
+s.total_proportion_infected=track_states(i,7)/N;
+s.epidemic_over=(sum(track_states(i,[1,7]))==N);
+%struct2csv(s,'baseline.csv') ;
+
+% s.track_states = track_states ;
+% s.peak_infection = peak_infection ;
+% s.days_to_peak_infection
+% s.peak_hospitalisation
+% s.days_to_peak_hospitalisation
+% s.peak_quarantine
+% s.days_to_peak_quarantine
+% s.total_proportion_infected
+% s.epidemic_over
+
+% %TRACK INFECTION THROUGH TIME
+% figure(2)
+% plot(track_states(1:i,1:7))
+% legend('susc','exp','presym','sym','mild','sev','rec')
+% 
+% figure(3)
+% plot(track_states(1:i,2:6))
+% legend('exp','presym','sym','mild','sev')
+% 
+% figure(4)
+% plot(track_states(1:i,8:14))
+% legend('q_susc','q_exp','q_presym','q_sym','q_mild','q_sev','q_rec')
+% 
+% figure(5)
+% plot(sum(track_states(1:i,8:14),2))
+% legend('total quarantine')
+% 
+% figure(6)
+% plot(sum(track_states(1:i,1:7),2))
+% legend('total camp')
 
 %The old model had apparatus for calculating age and sex-specific death
 %rates. I have not moved that to this model, for two reasons. First, unless
